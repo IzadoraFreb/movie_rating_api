@@ -1,13 +1,77 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
+}
+
+model Movie {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  year        Int
+  duration    Int
+  director    String
+
+  genres    MovieGenre[]
+  reviews   Review[]
+  watchlist Watchlist[]
+}
+
+model Genre {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  movies MovieGenre[]
+}
+
+model MovieGenre {
+  movieId Int
+  genreId Int
+
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  genre Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([movieId, genreId])
+  @@index([genreId])
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String
+
+  reviews   Review[]
+  watchlist Watchlist[]
+}
+
+model Review {
+  id      Int      @id @default(autoincrement())
+  rating  Int
+  comment String?
+  date    DateTime @default(now())
+  movieId Int
+  userId  Int
+
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([movieId])
+  @@index([userId])
+}
+
+model Watchlist {
+  id        Int      @id @default(autoincrement())
+  movieId   Int
+  userId    Int
+  dateAdded DateTime @default(now())
+
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@index([movieId])
 }
