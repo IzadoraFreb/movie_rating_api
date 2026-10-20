@@ -1,0 +1,115 @@
+@baseUrl = http://localhost:3000/api
+@username = cineteste
+@email = cineteste@example.com
+@password = senha-forte-123
+@otherUsername = cineteste2
+
+### Health check
+GET {{baseUrl}}
+
+### Registrar usuário principal (execute uma única vez)
+# @name register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Entrar e obter token
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Criar filme
+# @name createMovie
+POST {{baseUrl}}/movies
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "title": "O Fabuloso Destino de Amélie Poulain",
+  "releaseYear": 2001,
+  "director": "Jean-Pierre Jeunet",
+  "synopsis": "Amélie decide ajudar as pessoas ao seu redor.",
+  "posterUrl": "https://example.com/amelie.jpg"
+}
+
+### Listar e buscar filmes
+GET {{baseUrl}}/movies?q=Amélie&page=1&limit=20
+
+### Ver filme criado
+GET {{baseUrl}}/movies/{{createMovie.response.body.$.id}}
+
+### Avaliar ou atualizar avaliação
+# @name reviewMovie
+PUT {{baseUrl}}/movies/{{createMovie.response.body.$.id}}/review
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "Um dos meus favoritos.",
+  "watchedAt": "2026-10-08T12:00:00.000Z"
+}
+
+### Meu perfil
+GET {{baseUrl}}/users/me
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### Atualizar meu perfil
+PATCH {{baseUrl}}/users/me
+Authorization: Bearer {{login.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "displayName": "Cinéfilo de teste",
+  "bio": "Registrando meus filmes favoritos."
+}
+
+### Avaliações do perfil
+GET {{baseUrl}}/users/{{username}}/reviews
+
+### Adicionar filme à watchlist
+POST {{baseUrl}}/watchlist/{{createMovie.response.body.$.id}}
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### Ver minha watchlist
+GET {{baseUrl}}/watchlist
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### Registrar segundo usuário para testar follows (execute uma única vez)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "{{otherUsername}}",
+  "email": "cineteste2@example.com",
+  "password": "outra-senha-forte-123"
+}
+
+### Seguir o segundo usuário
+POST {{baseUrl}}/users/{{otherUsername}}/follow
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### Ver seguidores do segundo usuário
+GET {{baseUrl}}/users/{{otherUsername}}/followers
+
+### Deixar de seguir o segundo usuário
+DELETE {{baseUrl}}/users/{{otherUsername}}/follow
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### Remover filme da watchlist
+DELETE {{baseUrl}}/watchlist/{{createMovie.response.body.$.id}}
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### Remover minha avaliação
+DELETE {{baseUrl}}/movies/{{createMovie.response.body.$.id}}/review
+Authorization: Bearer {{login.response.body.$.accessToken}}

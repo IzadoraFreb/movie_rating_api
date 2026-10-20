@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String          @id @default(cuid())
+  username     String          @unique
+  email        String          @unique
+  passwordHash String
+  displayName  String?
+  bio          String?
+  avatarUrl    String?
+  createdAt    DateTime        @default(now())
+  reviews      Review[]
+  watchlist    WatchlistItem[]
+  following    Follow[]        @relation("Following")
+  followers    Follow[]        @relation("Followers")
+}
+
+model Movie {
+  id            String          @id @default(cuid())
+  title         String
+  releaseYear   Int?
+  director      String?
+  synopsis      String?
+  posterUrl     String?
+  createdAt     DateTime        @default(now())
+  reviews       Review[]
+  watchlistedBy WatchlistItem[]
+
+  @@index([title])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  watchedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  userId    String
+  movieId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@index([movieId])
+}
+
+model WatchlistItem {
+  userId  String
+  movieId String
+  addedAt DateTime @default(now())
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie   Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@id([userId, movieId])
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+}
