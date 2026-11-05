@@ -1,0 +1,14 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="30" height="40" viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="P&#195;&#180;ster">
+<g clip-path="url(#clip0_0_37)">
+<rect width="30" height="40" rx="5" fill="#FFA2B6"/>
+<circle id="Forma circular" cx="8.4" cy="17.7" r="12.9" fill="#D6536D"/>
+<rect id="Plano gr&#195;&#161;fico" x="-6" y="18.8" width="45" height="12" transform="rotate(14 -6 18.8)" fill="#E43D12"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_37">
+<rect width="30" height="40" rx="5" fill="white"/>
+</clipPath>
+</defs>
+</svg>
