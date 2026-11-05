@@ -41,7 +41,8 @@ Após `npm run db:seed` na raiz:
 
 | Rota | Tela |
 | --- | --- |
-| `/`, `/filmes` | Catálogo, pesquisa por título/direção e filtros de gênero, ano e nota |
+| `/` | Página inicial com apresentação, filmes em destaque e avaliações recentes da comunidade |
+| `/filmes` | Catálogo completo, pesquisa por título/direção e filtros de gênero, ano e nota |
 | `/generos` | Navegação por gênero |
 | `/filmes/:id` | Ficha, média da comunidade, assistido, Watchlist e avaliações |
 | `/login`, `/cadastro` | Acesso e criação de conta |

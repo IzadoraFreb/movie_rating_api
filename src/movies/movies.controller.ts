@@ -45,6 +45,11 @@ export class MoviesController {
     return this.moviesService.filters();
   }
 
+  @Get('highlights')
+  highlights() {
+    return this.moviesService.highlights();
+  }
+
   @Get(':id')
   getById(@Param('id') id: string) {
     return this.moviesService.getById(id);
