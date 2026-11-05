@@ -15,9 +15,11 @@ model User {
   displayName  String?
   bio          String?
   avatarUrl    String?
+  role         String          @default("USER")
   createdAt    DateTime        @default(now())
   reviews      Review[]
   watchlist    WatchlistItem[]
+  watched      WatchedMovie[]
   following    Follow[]        @relation("Following")
   followers    Follow[]        @relation("Followers")
 }
@@ -29,9 +31,12 @@ model Movie {
   director      String?
   synopsis      String?
   posterUrl     String?
+  duration      Int?
   createdAt     DateTime        @default(now())
   reviews       Review[]
   watchlistedBy WatchlistItem[]
+  watchedBy     WatchedMovie[]
+  genres        Genre[]
 
   @@index([title])
 }
@@ -49,6 +54,22 @@ model Review {
 
   @@unique([userId, movieId])
   @@index([movieId])
+}
+
+model Genre {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  movies Movie[]
+}
+
+model WatchedMovie {
+  userId    String
+  movieId   String
+  watchedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@id([userId, movieId])
 }
 
 model WatchlistItem {

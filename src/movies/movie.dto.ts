@@ -1,5 +1,8 @@
 import {
   IsDateString,
+  IsArray,
+  ArrayUnique,
+  MinLength,
   IsInt,
   IsOptional,
   IsString,
@@ -11,6 +14,7 @@ import {
 
 export class CreateMovieDto {
   @IsString()
+  @MinLength(1)
   @MaxLength(200)
   title!: string;
 
@@ -32,7 +36,19 @@ export class CreateMovieDto {
 
   @IsOptional()
   @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
-  posterUrl?: string;
+  posterUrl?: string | null;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(1440)
+  duration?: number;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  genreIds?: string[];
 }
 
 export class CreateReviewDto {

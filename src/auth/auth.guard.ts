@@ -50,7 +50,10 @@ export class JwtAuthGuard implements CanActivate {
   }
 }
 
-export function createAccessToken(user: { id: string; username: string }): string {
+export function createAccessToken(user: {
+  id: string;
+  username: string;
+}): string {
   return jwt.sign({ username: user.username }, tokenSecret(), {
     algorithm: 'HS256',
     subject: user.id,

@@ -9,7 +9,11 @@ export class WatchlistService {
     const items = await this.prisma.watchlistItem.findMany({
       where: { userId },
       orderBy: { addedAt: 'desc' },
-      include: { movie: { include: { reviews: { select: { rating: true } } } } },
+      include: {
+        movie: {
+          include: { genres: true, reviews: { select: { rating: true } } },
+        },
+      },
     });
     return items.map(({ movie, addedAt }) => ({
       addedAt,

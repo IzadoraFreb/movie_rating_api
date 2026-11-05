@@ -1,4 +1,12 @@
-import { Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import type { AuthenticatedRequest } from '../auth/auth.guard';
 import { WatchlistService } from './watchlist.service';
@@ -19,7 +27,10 @@ export class WatchlistController {
   }
 
   @Delete(':movieId')
-  remove(@Param('movieId') movieId: string, @Req() request: AuthenticatedRequest) {
+  remove(
+    @Param('movieId') movieId: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
     return this.watchlistService.remove(request.user.sub, movieId);
   }
 }

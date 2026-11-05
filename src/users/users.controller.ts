@@ -21,12 +21,21 @@ export class UsersController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   me(@Req() request: AuthenticatedRequest) {
-    return this.usersService.profile(request.user.username);
+    return this.usersService.me(request.user.sub);
+  }
+
+  @Get('me/watched')
+  @UseGuards(JwtAuthGuard)
+  watched(@Req() request: AuthenticatedRequest) {
+    return this.usersService.watched(request.user.sub);
   }
 
   @Patch('me')
   @UseGuards(JwtAuthGuard)
-  updateProfile(@Body() body: UpdateProfileDto, @Req() request: AuthenticatedRequest) {
+  updateProfile(
+    @Body() body: UpdateProfileDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
     return this.usersService.updateProfile(request.user.sub, body);
   }
 
@@ -52,13 +61,19 @@ export class UsersController {
 
   @Post(':username/follow')
   @UseGuards(JwtAuthGuard)
-  follow(@Param('username') username: string, @Req() request: AuthenticatedRequest) {
+  follow(
+    @Param('username') username: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
     return this.usersService.follow(request.user.sub, username);
   }
 
   @Delete(':username/follow')
   @UseGuards(JwtAuthGuard)
-  unfollow(@Param('username') username: string, @Req() request: AuthenticatedRequest) {
+  unfollow(
+    @Param('username') username: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
     return this.usersService.unfollow(request.user.sub, username);
   }
 }

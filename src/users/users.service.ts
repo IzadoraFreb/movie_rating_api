@@ -1,10 +1,56 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProfileDto } from './user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async me(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        displayName: true,
+        bio: true,
+        avatarUrl: true,
+        role: true,
+        createdAt: true,
+        _count: { select: { reviews: true, watched: true, watchlist: true } },
+      },
+    });
+    if (!user) throw new NotFoundException('Usuário não encontrado');
+    return user;
+  }
+
+  async watched(userId: string) {
+    const records = await this.prisma.watchedMovie.findMany({
+      where: { userId },
+      orderBy: { watchedAt: 'desc' },
+      include: {
+        movie: {
+          include: {
+            genres: true,
+            reviews: { where: { userId }, select: { rating: true } },
+          },
+        },
+      },
+    });
+    return records.map(({ movie, ...record }) => ({
+      ...record,
+      movie: {
+        ...movie,
+        myRating: movie.reviews[0]?.rating ?? null,
+        reviews: undefined,
+      },
+    }));
+  }
 
   async profile(username: string) {
     const user = await this.prisma.user.findUnique({
@@ -57,9 +103,12 @@ export class UsersService {
       select: { id: true },
     });
     if (!target) throw new NotFoundException('Usuário não encontrado');
-    if (target.id === userId) throw new ConflictException('Não é possível seguir a si mesmo');
+    if (target.id === userId)
+      throw new ConflictException('Não é possível seguir a si mesmo');
     await this.prisma.follow.upsert({
-      where: { followerId_followingId: { followerId: userId, followingId: target.id } },
+      where: {
+        followerId_followingId: { followerId: userId, followingId: target.id },
+      },
       create: { followerId: userId, followingId: target.id },
       update: {},
     });
@@ -85,10 +134,18 @@ export class UsersService {
     });
     if (!user) throw new NotFoundException('Usuário não encontrado');
     const records = await this.prisma.follow.findMany({
-      where: direction === 'followers' ? { followingId: user.id } : { followerId: user.id },
+      where:
+        direction === 'followers'
+          ? { followingId: user.id }
+          : { followerId: user.id },
       include: {
         [direction === 'followers' ? 'follower' : 'following']: {
-          select: { id: true, username: true, displayName: true, avatarUrl: true },
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+          },
         },
       },
       orderBy: { createdAt: 'desc' },
