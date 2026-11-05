@@ -26,7 +26,7 @@ async function proxy(
         cache: 'no-store',
         body: ['GET', 'HEAD'].includes(request.method)
           ? undefined
-          : await request.text(),
+          : await request.arrayBuffer(),
         signal: AbortSignal.any([request.signal, AbortSignal.timeout(15000)]),
       },
     );
@@ -36,6 +36,7 @@ async function proxy(
         'Content-Type':
           upstream.headers.get('content-type') || 'application/json',
         'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch {

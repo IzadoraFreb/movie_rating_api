@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { RequireAuth, useAuth } from './AuthProvider';
-import { Avatar, Icon } from './ui';
+import { UserProfileLink, Icon } from './ui';
 const pages = [
   {
     path: '/admin',
@@ -83,13 +83,9 @@ function AdminContent({ children }: { children: React.ReactNode }) {
         </div>
         <div className="admin-session">
           <hr />
-          <div className="user-identity">
-            <Avatar user={user!} />
-            <div>
-              <strong>{user!.displayName || user!.username}</strong>
-              <small className="muted">Administrador</small>
-            </div>
-          </div>
+          <UserProfileLink user={user!} avatar>
+            <small className="muted">Administrador</small>
+          </UserProfileLink>
           <button
             className="text-button muted logout"
             onClick={() => {

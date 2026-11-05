@@ -47,6 +47,8 @@ Após `npm run db:seed` na raiz:
 | `/filmes/:id` | Ficha, média da comunidade, assistido, Watchlist e avaliações |
 | `/login`, `/cadastro` | Acesso e criação de conta |
 | `/minha-area` | Histórico, avaliações e Watchlist |
+| `/perfil/:username` | Perfil com nome, foto, banner, descrição e avaliações publicadas |
+| `/minha-area/editar` | Edição do nome, descrição, foto de perfil e banner, com prévia |
 | `/filmes/:id/avaliar` | Criação e edição da própria avaliação |
 | `/admin` | Dashboard com contagens e distribuição por gênero |
 | `/admin/filmes` | Listagem, cadastro, edição e exclusão de filmes |
@@ -57,6 +59,14 @@ Após `npm run db:seed` na raiz:
 As rotas de formulário usam `/novo` e `/:id/editar`. O administrador visualiza uma avaliação em `/admin/avaliacoes/:id`. A rota antiga `/admin/users` redireciona para `/admin/usuarios`.
 
 A interface usa CSS próprio com os tokens do protótipo, fonte Inter local e SVGs locais em `public/figma`. Não depende do Bootstrap, de CDNs de fontes ou de URLs temporárias do Figma. Pôsteres informados pelo usuário continuam dinâmicos, com arte de fallback se a imagem falhar.
+
+Para personalizar a conta, clique no seu nome ou foto no cabeçalho e acesse **Editar perfil**. É possível trocar ou remover a foto e o banner, editar o nome de exibição e escrever uma descrição de até 500 caracteres. As imagens são selecionadas no computador ou celular e só são enviadas ao salvar. São aceitos PNG, JPG e WebP de até 5 MB cada. A prévia mostra o recorte circular da foto e o recorte horizontal do banner; cancelar descarta as alterações. A foto salva aparece no cabeçalho e nas avaliações, e o banner e a descrição aparecem na área pessoal.
+
+Após atualizar um checkout existente, execute `npm run db:generate` e `npm run db:deploy` na raiz para adicionar o campo de banner. As imagens ficam no backend em `uploads/profiles` (configurável por `PROFILE_UPLOAD_DIR`), e essa pasta deve ser preservada junto com o banco.
+
+O nome e a foto no cabeçalho abrem `/perfil/:username`, uma página com informações e avaliações publicadas. O botão **Minha área** abre o histórico e a Watchlist. **Editar perfil** aparece apenas na página do próprio perfil; visitantes não veem essa ação nem o e-mail da conta.
+
+Os nomes e avatares nas avaliações de filmes, nas avaliações recentes do início e nas listagens administrativas também abrem o perfil público do usuário correspondente. A visualização não exige login.
 
 ## Verificações
 

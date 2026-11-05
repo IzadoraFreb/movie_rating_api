@@ -14,6 +14,7 @@ const env = {
   DEMO_PASSWORD: 'Cinema123!',
   JWT_SECRET: 'browser-test-only-secret',
   PORT: '4300',
+  PROFILE_UPLOAD_DIR: join(directory, 'profiles'),
 };
 execFileSync(
   process.execPath,

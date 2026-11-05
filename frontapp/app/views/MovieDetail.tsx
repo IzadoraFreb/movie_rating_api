@@ -8,7 +8,7 @@ import type { Activity, Movie } from '@/lib/types';
 import { useAuth } from '../components/AuthProvider';
 import { SiteShell } from '../components/SiteShell';
 import {
-  Avatar,
+  UserProfileLink,
   Back,
   Badge,
   Feedback,
@@ -146,17 +146,11 @@ export default function MovieDetail({ id }: { id: string }) {
                 {data.reviews.map((review) => (
                   <article className="panel review-card" key={review.id}>
                     <div className="section-heading">
-                      <div className="user-identity">
-                        <Avatar user={review.user} />
-                        <div>
-                          <strong>
-                            {review.user.displayName || review.user.username}
-                          </strong>
-                          <small className="muted">
-                            {date(review.watchedAt)}
-                          </small>
-                        </div>
-                      </div>
+                      <UserProfileLink user={review.user} avatar>
+                        <small className="muted">
+                          {date(review.watchedAt)}
+                        </small>
+                      </UserProfileLink>
                       <Rating value={review.rating} large />
                     </div>
                     <p>

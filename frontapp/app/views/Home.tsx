@@ -6,7 +6,7 @@ import type { Movie, Review } from '@/lib/types';
 import { useAuth } from '../components/AuthProvider';
 import { SiteShell } from '../components/SiteShell';
 import {
-  Avatar,
+  UserProfileLink,
   Icon,
   MovieCard,
   Poster,
@@ -129,17 +129,11 @@ export default function Home() {
                       </div>
                     </Link>
                     <div className="section-heading">
-                      <div className="user-identity">
-                        <Avatar user={review.user} />
-                        <div>
-                          <strong>
-                            {review.user.displayName || review.user.username}
-                          </strong>
-                          <small className="muted">
-                            {date(review.createdAt)}
-                          </small>
-                        </div>
-                      </div>
+                      <UserProfileLink user={review.user} avatar>
+                        <small className="muted">
+                          {date(review.createdAt)}
+                        </small>
+                      </UserProfileLink>
                       <Rating value={review.rating} />
                     </div>
                     <p className={styles.comment}>

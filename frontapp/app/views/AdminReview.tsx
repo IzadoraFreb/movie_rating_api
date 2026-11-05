@@ -5,7 +5,7 @@ import { api, message } from '@/lib/api';
 import { useResource } from '@/lib/use-resource';
 import type { Review } from '@/lib/types';
 import {
-  Avatar,
+  UserProfileLink,
   Back,
   Badge,
   ConfirmDialog,
@@ -68,13 +68,9 @@ export default function AdminReview({ id }: { id: string }) {
             </div>
             <hr />
             <div className="section-heading">
-              <div className="user-identity">
-                <Avatar user={data.user} />
-                <div>
-                  <strong>{data.user.displayName || data.user.username}</strong>
-                  <small className="muted">{data.user.email}</small>
-                </div>
-              </div>
+              <UserProfileLink user={data.user} avatar>
+                <small className="muted">{data.user.email}</small>
+              </UserProfileLink>
               <div>
                 <small className="muted">Data da avaliação</small>
                 <p>{date(data.watchedAt)}</p>

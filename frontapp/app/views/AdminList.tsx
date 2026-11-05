@@ -5,7 +5,7 @@ import { api, message, query } from '@/lib/api';
 import { useResource } from '@/lib/use-resource';
 import type { Genre, Movie, PageResult, Review, User } from '@/lib/types';
 import {
-  Avatar,
+  UserProfileLink,
   Badge,
   ConfirmDialog,
   Feedback,
@@ -335,10 +335,7 @@ export default function AdminList({ kind }: { kind: Kind }) {
                   subset(userRows).map((user) => (
                     <tr key={user.id}>
                       <td>
-                        <div className="user-identity">
-                          <Avatar user={user} />
-                          <span>{user.displayName || user.username}</span>
-                        </div>
+                        <UserProfileLink user={user} avatar />
                       </td>
                       <td>{user.email}</td>
                       <td>
@@ -360,7 +357,9 @@ export default function AdminList({ kind }: { kind: Kind }) {
                   subset(reviewRows).map((review) => (
                     <tr key={review.id}>
                       <td>{review.movie.title}</td>
-                      <td>{review.user.displayName || review.user.username}</td>
+                      <td>
+                        <UserProfileLink user={review.user} />
+                      </td>
                       <td>
                         <Rating value={review.rating} />
                       </td>
