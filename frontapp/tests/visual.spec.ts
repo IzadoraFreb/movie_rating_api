@@ -71,7 +71,8 @@ test('conferência visual das telas do protótipo em desktop', async ({
       body.accessToken,
     );
   }
-  await capture('/', 'Encontre seu próximo filme', '01-catalogo');
+  await capture('/', 'Todo filme merece uma boa conversa.', '00-inicio');
+  await capture('/filmes', 'Encontre seu próximo filme', '01-catalogo');
   await capture('/filmes/demo-movie-0', 'Entre marés', '02-detalhes');
   await capture('/login', 'Bom ter você de volta', '03-login');
   await capture('/cadastro', 'Crie sua conta', '04-cadastro');

@@ -114,7 +114,7 @@ function AdminContent({ children }: { children: React.ReactNode }) {
             <Icon name="right" />
             <span>{current.label}</span>
           </div>
-          <Link className="back" href="/">
+          <Link className="back" href="/filmes">
             Ver catálogo público
             <Icon name="external" />
           </Link>

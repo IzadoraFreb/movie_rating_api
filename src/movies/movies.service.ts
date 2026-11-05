@@ -89,6 +89,21 @@ export class MoviesService {
     return { years: years.map((movie) => movie.releaseYear) };
   }
 
+  async highlights() {
+    const [catalog, recentReviews] = await Promise.all([
+      this.list(undefined, 1, 6),
+      this.prisma.review.findMany({
+        take: 3,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        include: {
+          movie: { include: { genres: true } },
+          user: { select: { id: true, username: true, displayName: true } },
+        },
+      }),
+    ]);
+    return { movies: catalog.data, recentReviews };
+  }
+
   async getById(id: string) {
     const movie = await this.prisma.movie.findUnique({
       where: { id },

@@ -101,6 +101,15 @@ after(async () => {
 });
 
 test('catálogo e dados do protótipo são públicos, sem dados privados', async () => {
+  const highlights = await request('/movies/highlights');
+  assert.equal(highlights.status, 200);
+  assert.equal(highlights.body.movies.length, 6);
+  assert.equal(highlights.body.recentReviews.length, 3);
+  for (const review of highlights.body.recentReviews) {
+    assert.equal(review.user.email, undefined);
+    assert.equal(review.user.passwordHash, undefined);
+    assert.ok(review.movie.id);
+  }
   const result = await request('/movies?limit=12');
   assert.equal(result.status, 200);
   assert.equal(result.body.total, 12);

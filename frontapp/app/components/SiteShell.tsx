@@ -10,18 +10,24 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <nav aria-label="Navegação principal">
-        <Link href="/">Início</Link>
+        <Link
+          href="/"
+          className={pathname === '/' ? 'active' : ''}
+          aria-current={pathname === '/' ? 'page' : undefined}
+        >
+          Início
+        </Link>
         <Link
           href="/filmes"
-          className={
-            pathname === '/' || pathname.startsWith('/filmes') ? 'active' : ''
-          }
+          className={pathname.startsWith('/filmes') ? 'active' : ''}
+          aria-current={pathname.startsWith('/filmes') ? 'page' : undefined}
         >
           Filmes
         </Link>
         <Link
           href="/generos"
           className={pathname === '/generos' ? 'active' : ''}
+          aria-current={pathname === '/generos' ? 'page' : undefined}
         >
           Gêneros
         </Link>

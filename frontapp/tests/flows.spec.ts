@@ -16,6 +16,12 @@ async function login(page: Page, email: string) {
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
 }
 async function assetsLoaded(page: Page) {
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all(
+      Array.from(document.images, (image) => image.decode().catch(() => {})),
+    );
+  });
   const assets = await page
     .locator('img[src^="/figma/"]')
     .evaluateAll((images) =>
@@ -52,10 +58,59 @@ async function assetsLoaded(page: Page) {
   ).toBe(true);
 }
 
-test('catálogo, filtros, detalhes, assets e telas de acesso', async ({
+test('início e filmes têm conteúdo próprio e mantêm a aba correta ativa', async ({
   page,
 }, info) => {
   await page.goto('/');
+  const navigation = page.getByRole('navigation', {
+    name: 'Navegação principal',
+  });
+  await expect(
+    page.getByRole('heading', { name: 'Todo filme merece uma boa conversa.' }),
+  ).toBeVisible();
+  await expect(
+    navigation.getByRole('link', { name: 'Início', exact: true }),
+  ).toHaveAttribute('aria-current', 'page');
+  await expect(
+    navigation.getByRole('link', { name: 'Filmes', exact: true }),
+  ).not.toHaveAttribute('aria-current', 'page');
+  await expect(page.locator('.movie-card')).toHaveCount(6);
+  await expect(
+    page.getByPlaceholder('Buscar por título ou direção'),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('heading', { name: 'O que a comunidade está assistindo' }),
+  ).toBeVisible();
+  await assetsLoaded(page);
+  await page.screenshot({
+    path: info.outputPath('inicio-desktop.png'),
+    fullPage: true,
+  });
+  await page
+    .getByRole('link', { name: 'Explorar filmes', exact: true })
+    .click();
+  await expect(page).toHaveURL('/filmes');
+  await expect(page.locator('.movie-card')).toHaveCount(12);
+  await expect(
+    page.getByPlaceholder('Buscar por título ou direção'),
+  ).toBeVisible();
+  await expect(
+    navigation.getByRole('link', { name: 'Filmes', exact: true }),
+  ).toHaveAttribute('aria-current', 'page');
+  await navigation.getByRole('link', { name: 'Início', exact: true }).click();
+  await expect(page).toHaveURL('/');
+  await expect(
+    page.getByRole('heading', { name: 'Todo filme merece uma boa conversa.' }),
+  ).toBeVisible();
+  await expect(
+    page.getByPlaceholder('Buscar por título ou direção'),
+  ).toHaveCount(0);
+});
+
+test('catálogo, filtros, detalhes, assets e telas de acesso', async ({
+  page,
+}, info) => {
+  await page.goto('/filmes');
   await expect(
     page.getByRole('heading', { name: 'Encontre seu próximo filme' }),
   ).toBeVisible();
@@ -120,7 +175,9 @@ test('cadastro, avaliação, assistido e Watchlist persistem após recarregar', 
   await page.getByLabel('Senha', { exact: true }).fill('Cinema123!');
   await page.getByLabel('Confirmar senha').fill('Outra123!');
   await page.getByRole('button', { name: 'Criar conta' }).click();
-  await expect(page.getByRole('alert').filter({ hasText: 'As senhas não coincidem.' })).toHaveText('As senhas não coincidem.');
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'As senhas não coincidem.' }),
+  ).toHaveText('As senhas não coincidem.');
   await page.getByLabel('Confirmar senha').fill('Cinema123!');
   await page.getByRole('button', { name: 'Criar conta' }).click();
   await expect(page).toHaveURL('/minha-area');
@@ -278,6 +335,16 @@ test('layout de celular mantém navegação, formulários e catálogo acessívei
 }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
+  await expect(page.locator('.movie-card')).toHaveCount(6);
+  await assetsLoaded(page);
+  await page.screenshot({
+    path: info.outputPath('inicio-mobile.png'),
+    fullPage: true,
+  });
+  await page
+    .getByRole('navigation', { name: 'Navegação principal' })
+    .getByRole('link', { name: 'Filmes', exact: true })
+    .click();
   await expect(page.locator('.movie-card')).toHaveCount(12);
   await assetsLoaded(page);
   await page.screenshot({

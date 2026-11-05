@@ -26,6 +26,7 @@ Authorization: Bearer <accessToken>
 | --- | --- | --- | --- |
 | GET | `/api/movies?q=&genre=&year=&rating=&page=1&limit=20` | Público | Buscar por título/direção e filtrar catálogo; `rating=unrated` busca filmes sem nota; 1–5 filtram a faixa da média |
 | GET | `/api/movies/filters` | Público | Anos disponíveis no catálogo |
+| GET | `/api/movies/highlights` | Público | Seis filmes em destaque e três avaliações recentes para a página inicial, sem dados privados dos autores |
 | GET | `/api/movies/:id` | Público | Detalhes e avaliações do filme |
 | POST | `/api/movies` | Admin | Cadastrar filme (`title`, `releaseYear?`, `duration?`, `director?`, `synopsis?`, `posterUrl?`, `genreIds?`) |
 | PATCH | `/api/movies/:id` | Admin | Atualizar filme; título obrigatório; `genreIds: []` remove vínculos e `posterUrl: null` limpa o pôster |

@@ -101,7 +101,7 @@ export function Rating({
   );
 }
 export function Back({
-  href = '/',
+  href = '/filmes',
   children = 'Voltar ao catálogo',
 }: {
   href?: string;
