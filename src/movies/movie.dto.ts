@@ -6,7 +6,6 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUrl,
   Max,
   MaxLength,
   Min,
@@ -33,10 +32,6 @@ export class CreateMovieDto {
   @IsString()
   @MaxLength(5000)
   synopsis?: string;
-
-  @IsOptional()
-  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
-  posterUrl?: string | null;
 
   @IsOptional()
   @IsInt()
