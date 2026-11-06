@@ -53,21 +53,30 @@ export function Avatar({
   user,
   large = false,
 }: {
-  user: Pick<User, 'username' | 'displayName'>;
+  user: Pick<User, 'username' | 'displayName' | 'avatarUrl'>;
   large?: boolean;
 }) {
   const name = user.displayName || user.username;
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
   return (
     <span
       className={'avatar' + (large ? ' avatar-large' : '')}
       aria-hidden="true"
     >
-      {name
-        .split(/\s+/)
-        .map((s) => s[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase()}
+      {user.avatarUrl && failedUrl !== user.avatarUrl ? (
+        <img
+          src={user.avatarUrl}
+          alt=""
+          onError={() => setFailedUrl(user.avatarUrl || null)}
+        />
+      ) : (
+        name
+          .split(/\s+/)
+          .map((s) => s[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase()
+      )}
     </span>
   );
 }
@@ -82,6 +91,30 @@ export function Badge({
     <span className={'badge' + (accent ? ' badge-accent' : '')}>
       {children}
     </span>
+  );
+}
+export function UserProfileLink({
+  user,
+  avatar = false,
+  children,
+}: {
+  user: Pick<User, 'username' | 'displayName' | 'avatarUrl'>;
+  avatar?: boolean;
+  children?: ReactNode;
+}) {
+  const name = user.displayName || user.username;
+  return (
+    <Link
+      href={'/perfil/' + encodeURIComponent(user.username)}
+      className={'user-profile-link' + (avatar ? ' user-identity' : '')}
+      aria-label={'Ver perfil de ' + name}
+    >
+      {avatar && <Avatar user={user} />}
+      <span className="profile-link-details">
+        <span className="profile-link-name">{name}</span>
+        {children}
+      </span>
+    </Link>
   );
 }
 export function Rating({

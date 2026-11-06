@@ -41,6 +41,7 @@ before(
       JWT_SECRET: 'integration-test-secret',
       DEMO_PASSWORD: password,
       PORT: String(port),
+      PROFILE_UPLOAD_DIR: join(directory, 'profiles'),
     };
     execFileSync(
       process.execPath,
@@ -98,6 +99,169 @@ after(async () => {
     await once(server, 'exit');
   }
   if (directory) await rm(directory, { recursive: true, force: true });
+});
+
+const profilePng = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGN4Yiv0HwAFbwIzqvYdxgAAAABJRU5ErkJggg==',
+  'base64',
+);
+
+test('edição do perfil salva imagens e descrição apenas da própria conta', async () => {
+  // Esta conta é independente das usadas pelos demais fluxos.
+  const account = (
+    await request('/auth/login', 'POST', {
+      email: 'elisa.rocha@example.com',
+      password,
+    })
+  ).body;
+  const initial = await request(
+    '/users/me',
+    'GET',
+    undefined,
+    account.accessToken,
+  );
+  const invalid = new FormData();
+  invalid.set('displayName', 'Não deve salvar');
+  invalid.set(
+    'avatar',
+    new Blob(['<svg>não é um PNG</svg>'], { type: 'image/png' }),
+    'fake.png',
+  );
+  let response = await fetch(base + '/users/me', {
+    method: 'PATCH',
+    headers: { Authorization: 'Bearer ' + account.accessToken },
+    body: invalid,
+  });
+  assert.equal(response.status, 400);
+  assert.equal(
+    (await request('/users/me', 'GET', undefined, account.accessToken)).body
+      .displayName,
+    initial.body.displayName,
+  );
+  assert.equal(
+    (
+      await request(
+        '/users/me',
+        'PATCH',
+        { role: 'ADMIN' },
+        account.accessToken,
+      )
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await request(
+        '/users/me',
+        'PATCH',
+        { userId: initial.body.id },
+        account.accessToken,
+      )
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await request(
+        '/users/me',
+        'PATCH',
+        { bio: 'x'.repeat(501) },
+        account.accessToken,
+      )
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await request(
+        '/users/me',
+        'PATCH',
+        { displayName: '  ' },
+        account.accessToken,
+      )
+    ).status,
+    400,
+  );
+  assert.equal(
+    (await request('/users/me', 'PATCH', { bio: 'sem token' })).status,
+    401,
+  );
+
+  const data = new FormData();
+  data.set('displayName', '  Perfil atualizado  ');
+  data.set('bio', 'Cinema, memória e boas histórias.');
+  data.set('avatar', new Blob([profilePng], { type: 'image/png' }), 'foto.png');
+  data.set(
+    'banner',
+    new Blob([profilePng], { type: 'image/png' }),
+    'banner.png',
+  );
+  response = await fetch(base + '/users/me', {
+    method: 'PATCH',
+    headers: { Authorization: 'Bearer ' + account.accessToken },
+    body: data,
+  });
+  assert.equal(response.status, 200);
+  const updated = await response.json();
+  assert.equal(updated.displayName, 'Perfil atualizado');
+  assert.match(updated.avatarUrl, /^\/api\/users\/images\/[a-f0-9-]+\.png$/);
+  assert.notEqual(updated.avatarUrl, updated.bannerUrl);
+  assert.equal(updated.passwordHash, undefined);
+  const current = (
+    await request('/users/me', 'GET', undefined, account.accessToken)
+  ).body;
+  assert.equal(current.bio, 'Cinema, memória e boas histórias.');
+  assert.equal(current.bannerUrl, updated.bannerUrl);
+  assert.equal(current.role, 'USER');
+  const image = await fetch(new URL(updated.avatarUrl, base));
+  assert.equal(image.status, 200);
+  assert.equal(image.headers.get('content-type'), 'image/png');
+  assert.equal(image.headers.get('x-content-type-options'), 'nosniff');
+  assert.deepEqual(Buffer.from(await image.arrayBuffer()), profilePng);
+  const publicProfile = (await request('/users/' + account.user.username)).body;
+  assert.equal(publicProfile.avatarUrl, updated.avatarUrl);
+  assert.equal(publicProfile.bannerUrl, updated.bannerUrl);
+  assert.equal(publicProfile.email, undefined);
+  await request(
+    '/users/me',
+    'PATCH',
+    { bio: 'Somente texto' },
+    account.accessToken,
+  );
+  assert.equal(
+    (await request('/users/me', 'GET', undefined, account.accessToken)).body
+      .avatarUrl,
+    updated.avatarUrl,
+  );
+
+  const oversized = new FormData();
+  oversized.set(
+    'banner',
+    new Blob([Buffer.alloc(5 * 1024 * 1024 + 1)], { type: 'image/png' }),
+    'too-big.png',
+  );
+  response = await fetch(base + '/users/me', {
+    method: 'PATCH',
+    headers: { Authorization: 'Bearer ' + account.accessToken },
+    body: oversized,
+  });
+  assert.equal(response.status, 413);
+  const clear = new FormData();
+  clear.set('removeAvatar', 'true');
+  clear.set('removeBanner', 'true');
+  clear.set('bio', '');
+  response = await fetch(base + '/users/me', {
+    method: 'PATCH',
+    headers: { Authorization: 'Bearer ' + account.accessToken },
+    body: clear,
+  });
+  assert.equal(response.status, 200);
+  const cleared = (
+    await request('/users/me', 'GET', undefined, account.accessToken)
+  ).body;
+  assert.equal(cleared.avatarUrl, null);
+  assert.equal(cleared.bannerUrl, null);
+  assert.equal(cleared.bio, '');
 });
 
 test('catálogo e dados do protótipo são públicos, sem dados privados', async () => {
@@ -163,6 +327,7 @@ test('cadastro, validação de duplicidade, login e perfil privado', async () =>
   assert.equal(me.body.email, input.email);
   assert.equal(me.body._count.watched, 0);
   const profile = await request('/users/' + member.user.username);
+  assert.equal(profile.body._count.watched, 0);
   assert.equal(profile.body.email, undefined);
   assert.equal(profile.body.passwordHash, undefined);
   other = (

@@ -16,6 +16,9 @@ export type User = {
   id: string;
   username: string;
   displayName: string | null;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  bannerUrl?: string | null;
   email?: string;
   role?: 'USER' | 'ADMIN';
   _count?: { watched: number; reviews: number; watchlist?: number };
@@ -30,6 +33,18 @@ export type Review = {
   userId: string;
   movie: Movie;
   user: User;
+};
+export type PublicProfile = Pick<
+  User,
+  'id' | 'username' | 'displayName' | 'bio' | 'avatarUrl' | 'bannerUrl'
+> & {
+  createdAt: string;
+  _count: {
+    reviews: number;
+    watched: number;
+    followers: number;
+    following: number;
+  };
 };
 export type PageResult<T> = {
   data: T[];

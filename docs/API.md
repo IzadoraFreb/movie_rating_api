@@ -41,7 +41,8 @@ Authorization: Bearer <accessToken>
 | GET | `/api/users/:username/following` | Público | Perfis seguidos |
 | GET | `/api/users/me` | Token | Seu perfil, e-mail, role e contagens de assistidos/avaliações/Watchlist |
 | GET | `/api/users/me/watched` | Token | Histórico de assistidos, com gênero e sua nota quando houver |
-| PATCH | `/api/users/me` | Token | Atualizar `displayName`, `bio` ou `avatarUrl` |
+| PATCH | `/api/users/me` | Token | Atualizar `displayName`, `bio`, `avatarUrl?`, `bannerUrl?`; aceita JSON ou formulário multipart com os arquivos `avatar` e `banner` |
+| GET | `/api/users/images/:filename` | Público | Carregar uma imagem de perfil enviada ao servidor |
 | POST | `/api/users/:username/follow` | Token | Seguir perfil |
 | DELETE | `/api/users/:username/follow` | Token | Deixar de seguir perfil |
 | GET | `/api/watchlist` | Token | Sua lista para assistir |
@@ -62,5 +63,9 @@ Authorization: Bearer <accessToken>
 Há uma avaliação por usuário e filme; enviar `PUT` novamente substitui a anterior e registra o filme como assistido na mesma transação. Remover a avaliação preserva o histórico de assistidos. Médias são calculadas a partir das notas existentes. Administradores são verificados no banco a cada ação protegida e não podem remover o próprio acesso administrativo.
 
 O banco usa migrações Prisma; a nova migração preserva os registros existentes e converte avaliações anteriores em histórico de assistidos. A API valida payloads, rejeitando campos desconhecidos. Os perfis públicos não expõem e-mail nem senha.
+
+Na edição do próprio perfil, `displayName` aceita de 2 a 80 caracteres e `bio`, até 500. Foto e banner aceitam PNG, JPG ou WebP, com limite de 5 MB por arquivo. Use `removeAvatar=true` ou `removeBanner=true` para remover imagens; campos omitidos preservam o valor anterior. O usuário só altera a conta identificada pelo token. Campos administrativos, como `role` ou `userId`, são rejeitados nessa rota.
+
+As imagens são salvas em `uploads/profiles`, fora do Git, ou no diretório definido em `PROFILE_UPLOAD_DIR`. Os nomes dos arquivos são gerados pelo servidor. A migração `20261105200000_profile_banner` adiciona o banner sem modificar os demais dados.
 
 `npm run db:seed` adiciona os 12 filmes, 8 gêneros, 6 contas e 8 avaliações de demonstração, preservando registros existentes. Funciona somente fora de produção. Consulte [frontapp/README.md](../frontapp/README.md) para iniciar o frontend e usar as contas de demonstração.

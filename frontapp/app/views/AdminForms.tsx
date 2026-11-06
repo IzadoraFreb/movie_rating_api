@@ -6,7 +6,7 @@ import { api, message } from '@/lib/api';
 import { useResource } from '@/lib/use-resource';
 import type { Genre, Movie, User } from '@/lib/types';
 import {
-  Avatar,
+  UserProfileLink,
   Back,
   Badge,
   Feedback,
@@ -211,17 +211,9 @@ function LoadedUser({ user }: { user: User }) {
         </form>
         <aside className="panel">
           <h2>Resumo do usuário</h2>
-          <div className="user-identity">
-            <Avatar user={user} />
-            <div>
-              <strong>{user.displayName || user.username}</strong>
-              <div>
-                <Badge>
-                  {user.role === 'ADMIN' ? 'Administrador' : 'Usuário'}
-                </Badge>
-              </div>
-            </div>
-          </div>
+          <UserProfileLink user={user} avatar>
+            <Badge>{user.role === 'ADMIN' ? 'Administrador' : 'Usuário'}</Badge>
+          </UserProfileLink>
           <hr />
           <div className="section-heading">
             <span className="muted">Filmes assistidos</span>

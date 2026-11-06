@@ -11,6 +11,7 @@ const userSelect = {
   id: true,
   username: true,
   displayName: true,
+  avatarUrl: true,
   email: true,
   role: true,
   createdAt: true,
@@ -19,7 +20,13 @@ const userSelect = {
 const reviewInclude = {
   movie: { include: { genres: true } },
   user: {
-    select: { id: true, username: true, displayName: true, email: true },
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      avatarUrl: true,
+      email: true,
+    },
   },
 } as const;
 

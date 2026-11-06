@@ -5,10 +5,15 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProfileDto } from './user.dto';
+import { ProfileImagesService } from './profile-images.service';
+import type { ProfileFiles } from './profile-images.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly images: ProfileImagesService,
+  ) {}
 
   async me(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -20,6 +25,7 @@ export class UsersService {
         displayName: true,
         bio: true,
         avatarUrl: true,
+        bannerUrl: true,
         role: true,
         createdAt: true,
         _count: { select: { reviews: true, watched: true, watchlist: true } },
@@ -61,27 +67,62 @@ export class UsersService {
         displayName: true,
         bio: true,
         avatarUrl: true,
+        bannerUrl: true,
         createdAt: true,
-        _count: { select: { reviews: true, followers: true, following: true } },
+        _count: {
+          select: {
+            reviews: true,
+            watched: true,
+            followers: true,
+            following: true,
+          },
+        },
       },
     });
     if (!user) throw new NotFoundException('Usuário não encontrado');
     return user;
   }
 
-  updateProfile(userId: string, input: UpdateProfileDto) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: input,
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        bio: true,
-        avatarUrl: true,
-        createdAt: true,
-      },
-    });
+  async updateProfile(
+    userId: string,
+    input: UpdateProfileDto,
+    files: ProfileFiles = {},
+  ) {
+    await this.me(userId);
+    const { removeAvatar, removeBanner, ...data } = input;
+    const avatar = files.avatar?.[0];
+    const banner = files.banner?.[0];
+    if (avatar) this.images.validate(avatar);
+    if (banner) this.images.validate(banner);
+    const saved: string[] = [];
+    try {
+      if (removeAvatar) data.avatarUrl = null;
+      if (removeBanner) data.bannerUrl = null;
+      if (avatar) {
+        data.avatarUrl = await this.images.save(avatar);
+        saved.push(data.avatarUrl);
+      }
+      if (banner) {
+        data.bannerUrl = await this.images.save(banner);
+        saved.push(data.bannerUrl);
+      }
+      return await this.prisma.user.update({
+        where: { id: userId },
+        data,
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          bio: true,
+          avatarUrl: true,
+          bannerUrl: true,
+          createdAt: true,
+        },
+      });
+    } catch (error) {
+      await Promise.all(saved.map((url) => this.images.discard(url)));
+      throw error;
+    }
   }
 
   async reviews(username: string) {

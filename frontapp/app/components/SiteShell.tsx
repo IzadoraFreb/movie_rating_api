@@ -39,11 +39,21 @@ export function SiteHeader() {
           <>
             <Link
               href="/minha-area"
-              className={pathname === '/minha-area' ? 'active' : ''}
+              className={pathname.startsWith('/minha-area') ? 'active' : ''}
             >
               Minha área
             </Link>
-            <Link href="/minha-area" className="account-name">
+            <Link
+              href={'/perfil/' + encodeURIComponent(user.username)}
+              className={
+                'account-name' +
+                (pathname === '/perfil/' + user.username ? ' active' : '')
+              }
+              aria-label="Ver meu perfil"
+              aria-current={
+                pathname === '/perfil/' + user.username ? 'page' : undefined
+              }
+            >
               <Avatar user={user} />
               <span>{user.displayName || user.username}</span>
             </Link>

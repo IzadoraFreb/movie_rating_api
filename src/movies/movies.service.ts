@@ -97,7 +97,14 @@ export class MoviesService {
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         include: {
           movie: { include: { genres: true } },
-          user: { select: { id: true, username: true, displayName: true } },
+          user: {
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
         },
       }),
     ]);
@@ -112,7 +119,14 @@ export class MoviesService {
         reviews: {
           orderBy: { watchedAt: 'desc' },
           include: {
-            user: { select: { id: true, username: true, displayName: true } },
+            user: {
+              select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatarUrl: true,
+              },
+            },
           },
         },
       },
@@ -219,7 +233,14 @@ export class MoviesService {
         },
         update: { rating: input.rating, comment: input.comment, watchedAt },
         include: {
-          user: { select: { id: true, username: true, displayName: true } },
+          user: {
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+            },
+          },
         },
       }),
       this.prisma.watchedMovie.upsert({

@@ -6,6 +6,7 @@ import { useResource } from '@/lib/use-resource';
 import type { Review, Watched, WatchlistItem } from '@/lib/types';
 import { RequireAuth, useAuth } from '../components/AuthProvider';
 import { SiteShell } from '../components/SiteShell';
+import { ProfileBanner } from '../components/ProfileBanner';
 import {
   Avatar,
   Badge,
@@ -48,27 +49,40 @@ function PersonalContent() {
   }
   return (
     <>
-      <section className="panel profile-summary">
-        <div className="user-identity">
-          <Avatar user={user!} large />
-          <div>
-            <h1>Minha área</h1>
-            <p>{user!.displayName || user!.username}</p>
-            <small className="muted">{user!.email}</small>
+      <section className="panel profile-overview">
+        {user!.bannerUrl && <ProfileBanner src={user!.bannerUrl} />}
+        <div className="profile-summary">
+          <div className="user-identity">
+            <Link
+              href={'/perfil/' + encodeURIComponent(user!.username)}
+              aria-label="Abrir meu perfil"
+            >
+              <Avatar user={user!} large />
+            </Link>
+            <div>
+              <h1>Minha área</h1>
+              <p>
+                <Link href={'/perfil/' + encodeURIComponent(user!.username)}>
+                  {user!.displayName || user!.username}
+                </Link>
+              </p>
+              <small className="muted">{user!.email}</small>
+            </div>
+          </div>
+          <div className="profile-counts">
+            {[
+              [user!._count?.watched || 0, 'Filmes assistidos'],
+              [user!._count?.reviews || 0, 'Avaliações'],
+              [user!._count?.watchlist || 0, 'Na Watchlist'],
+            ].map(([count, label]) => (
+              <div key={label}>
+                <strong>{count}</strong>
+                <small className="muted">{label}</small>
+              </div>
+            ))}
           </div>
         </div>
-        <div className="profile-counts">
-          {[
-            [user!._count?.watched || 0, 'Filmes assistidos'],
-            [user!._count?.reviews || 0, 'Avaliações'],
-            [user!._count?.watchlist || 0, 'Na Watchlist'],
-          ].map(([count, label]) => (
-            <div key={label}>
-              <strong>{count}</strong>
-              <small className="muted">{label}</small>
-            </div>
-          ))}
-        </div>
+        {user!.bio && <p className="profile-bio">{user!.bio}</p>}
       </section>
       <Feedback error={error} />
       <div className="personal-columns">

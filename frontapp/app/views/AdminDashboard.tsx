@@ -2,7 +2,14 @@
 import Link from 'next/link';
 import { useResource } from '@/lib/use-resource';
 import type { Dashboard } from '@/lib/types';
-import { Icon, PageTitle, Rating, State, date } from '../components/ui';
+import {
+  Icon,
+  PageTitle,
+  Rating,
+  State,
+  UserProfileLink,
+  date,
+} from '../components/ui';
 export default function AdminDashboard() {
   const resource = useResource<Dashboard>('/admin/dashboard');
   if (resource.loading || resource.error || !resource.data)
@@ -92,7 +99,9 @@ export default function AdminDashboard() {
                         {review.movie.title}
                       </Link>
                     </td>
-                    <td>{review.user.displayName || review.user.username}</td>
+                    <td>
+                      <UserProfileLink user={review.user} />
+                    </td>
                     <td>
                       <Rating value={review.rating} />
                     </td>
