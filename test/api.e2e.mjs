@@ -264,28 +264,38 @@ test('edição do perfil salva imagens e descrição apenas da própria conta', 
   assert.equal(cleared.bio, '');
 });
 
-test('catálogo e dados do protótipo são públicos, sem dados privados', async () => {
+test('catálogo usa somente títulos com cartazes locais', async () => {
   const highlights = await request('/movies/highlights');
   assert.equal(highlights.status, 200);
   assert.equal(highlights.body.movies.length, 6);
-  assert.equal(highlights.body.recentReviews.length, 3);
-  for (const review of highlights.body.recentReviews) {
-    assert.equal(review.user.email, undefined);
-    assert.equal(review.user.passwordHash, undefined);
-    assert.ok(review.movie.id);
-  }
+  assert.equal(highlights.body.recentReviews.length, 0);
   const result = await request('/movies?limit=12');
   assert.equal(result.status, 200);
-  assert.equal(result.body.total, 12);
-  assert.equal(result.body.data[0].title, 'Entre marés');
-  assert.equal(result.body.data[0].averageRating, 4.5);
+  assert.equal(result.body.total, 8);
+  assert.deepEqual(
+    result.body.data.map((movie) => movie.title).sort(),
+    [
+      'Bons para cachorro',
+      'Emily',
+      'Gente Grande',
+      'Harry Potter Pedra Filosofal 2001',
+      'Hellboy',
+      'Shrek',
+      'Paddington 2',
+      'Terrifier',
+    ].sort(),
+  );
+  assert.ok(
+    result.body.data.every((movie) =>
+      movie.posterUrl.startsWith('/posters?title='),
+    ),
+  );
   assert.equal((await request('/genres')).body.length, 8);
-  const detail = await request('/movies/demo-movie-0');
-  assert.equal(detail.body.duration, 108);
-  assert.equal(detail.body.genres.length, 2);
-  assert.equal(detail.body.reviews.length, 2);
-  assert.equal(detail.body.reviews[0].user.email, undefined);
-  assert.equal((await request('/movies/filters')).body.years[0], 2025);
+  const movie = result.body.data.find((item) => item.title === 'Gente Grande');
+  const detail = await request('/movies/' + movie.id);
+  assert.equal(detail.body.title, 'Gente Grande');
+  assert.equal(detail.body.reviews.length, 0);
+  assert.deepEqual((await request('/movies/filters')).body.years, []);
 });
 test('cadastro, validação de duplicidade, login e perfil privado', async () => {
   const input = {
@@ -372,7 +382,7 @@ test('a API bloqueia acesso administrativo sem permissão e tokens inválidos', 
     403,
   );
 });
-test('admin cadastra gênero e filme, valida campos e filtra catálogo', async () => {
+test('admin valida títulos com cartaz e filtra catálogo', async () => {
   genre = (
     await request(
       '/genres',
@@ -409,12 +419,36 @@ test('admin cadastra gênero e filme, valida campos e filtra catálogo', async (
     ).status,
     400,
   );
+  assert.equal(
+    (
+      await request(
+        '/movies',
+        'POST',
+        { title: 'Filme de teste', genreIds: [genre.id] },
+        admin.accessToken,
+      )
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await request(
+        '/movies',
+        'POST',
+        { title: 'Gente Grande' },
+        admin.accessToken,
+      )
+    ).status,
+    409,
+  );
+  const catalog = await request('/movies?limit=12');
+  movie = catalog.body.data.find((item) => item.title === 'Gente Grande');
   movie = (
     await request(
-      '/movies',
-      'POST',
+      '/movies/' + movie.id,
+      'PATCH',
       {
-        title: 'Filme de teste',
+        title: movie.title,
         releaseYear: 2026,
         duration: 101,
         director: 'Diretora de teste',
@@ -424,6 +458,7 @@ test('admin cadastra gênero e filme, valida campos e filtra catálogo', async (
     )
   ).body;
   assert.ok(movie.id);
+  assert.equal(movie.posterUrl, '/posters?title=Gente%20Grande');
   assert.equal(
     (
       await request(
@@ -454,7 +489,7 @@ test('admin cadastra gênero e filme, valida campos e filtra catálogo', async (
         admin.accessToken,
       )
     ).status,
-    200,
+    400,
   );
 });
 test('assistido é independente da avaliação e Watchlist não duplica', async () => {
@@ -671,8 +706,8 @@ test('exclusão de filme limpa vínculos e o dashboard usa contagens reais', asy
   const data = (
     await request('/admin/dashboard', 'GET', undefined, admin.accessToken)
   ).body;
-  assert.equal(data.movies, 12);
+  assert.equal(data.movies, 7);
   assert.equal(data.genres, 8);
   assert.equal(data.users, 8);
-  assert.equal(data.reviews, 8);
+  assert.equal(data.reviews, 0);
 });

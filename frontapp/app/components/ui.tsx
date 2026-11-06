@@ -356,22 +356,6 @@ export function date(value: string) {
   return new Date(value).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 }
 
-const titles = [
-  'Entre marés',
-  'A última estação',
-  'Órbita silenciosa',
-  'Dias de setembro',
-  'O jardim de vidro',
-  'Quase domingo',
-  'Pequenos planetas',
-  'Cartas do norte',
-  'Depois da chuva',
-  'A casa do vento',
-  'Horizonte comum',
-  'Cidade em pausa',
-];
-const circles = ['a40fc', '03bb2', '5e1a7', '447f7', '19756', 'a40fc'];
-const thumbs = ['c9b11', '1dba2', '2d472', '2c872', 'fc4ca', '53f11'];
 export function Poster({
   movie,
   slot = 'catalog',
@@ -380,70 +364,28 @@ export function Poster({
   slot?:
     'catalog' | 'detail' | 'table' | 'history' | 'watchlist' | 'moderation';
 }) {
-  const index = titles.indexOf(movie.title);
-  const palette = index < 0 ? 0 : index % 6;
-  const dynamic = movie.posterUrl;
-  const [failed, setFailed] = useImageFailure(dynamic);
-  if (dynamic && !failed)
+  const local = '/posters?title=' + encodeURIComponent(movie.title);
+  const [failedLocal, setFailedLocal] = useImageFailure(local);
+  if (!failedLocal)
     return (
       <img
         className={'poster-image poster-image-' + slot}
-        src={dynamic}
+        src={local}
         alt={'Pôster de ' + movie.title}
-        onError={setFailed}
-      />
-    );
-  let asset: string | undefined;
-  if (index >= 0) {
-    if (slot === 'table') asset = thumbs[palette];
-    if (slot === 'history')
-      asset = (
-        { 0: 'd6e92', 1: '1ac19', 3: '999b1' } as Record<number, string>
-      )[index];
-    if (slot === 'watchlist')
-      asset = ({ 2: 'd97c4', 4: 'e5185' } as Record<number, string>)[index];
-    if (slot === 'moderation' && index === 0) asset = '86cea';
-  }
-  if (asset)
-    return (
-      <img
-        className="poster-static"
-        src={'/figma/' + asset + '.svg'}
-        alt={'Pôster de ' + movie.title}
+        onError={setFailedLocal}
       />
     );
   return (
     <div
       role="img"
       aria-label={'Pôster de ' + movie.title}
-      className={'poster poster-' + slot + ' palette-' + palette}
+      className={'poster poster-' + slot + ' poster-missing'}
     >
-      <img
-        className="poster-circle"
-        src={
-          '/figma/' +
-          (slot === 'detail' && palette === 0 ? '5cdb1' : circles[palette]) +
-          '.svg'
-        }
-        alt=""
-      />
-      <span className="poster-band" />
-      {(slot === 'catalog' || slot === 'detail') && (
-        <>
-          <span className="poster-credit">
-            UM FILME DE{' '}
-            {(movie.director || 'DIREÇÃO NÃO INFORMADA').toUpperCase()}
-          </span>
-          <span className="poster-title">
-            <strong>{movie.title}</strong>
-            <small>{movie.releaseYear}</small>
-          </span>
-        </>
-      )}
+      Cartaz indisponível
     </div>
   );
 }
-function useImageFailure(src: string | null) {
+function useImageFailure(src: string) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   return [Boolean(src && failedSrc === src), () => setFailedSrc(src)] as const;
 }

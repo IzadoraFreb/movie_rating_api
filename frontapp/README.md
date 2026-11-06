@@ -15,7 +15,7 @@ npm run db:seed
 npm run start:dev
 ```
 
-O seed é opcional: adiciona o catálogo demonstrativo sem apagar os dados existentes. Não o execute em produção.
+O seed cria contas e gêneros de demonstração e sincroniza o catálogo com as imagens em `public`. O backend também sincroniza o catálogo ao iniciar: títulos vêm dos nomes dos arquivos, com underscores convertidos em espaços. Apenas filmes com cartaz local são mantidos; registros correspondentes preservam suas avaliações. Para incluir uma imagem nova, adicione-a a `public` em JPG, JPEG (incluindo `.jpe`), PNG ou WebP e reinicie o backend. Não execute o seed em produção.
 
 Em outro terminal, dentro de `frontapp`:
 

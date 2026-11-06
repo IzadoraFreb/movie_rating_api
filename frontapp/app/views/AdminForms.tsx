@@ -278,7 +278,6 @@ function LoadedMovie({ movie, genres }: { movie?: Movie; genres: Genre[] }) {
       director: String(data.get('director')).trim(),
       synopsis: String(data.get('synopsis')).trim(),
       genreIds: data.getAll('genreIds'),
-      posterUrl: String(data.get('posterUrl') || '').trim() || null,
     };
     setBusy(true);
     setError('');
@@ -312,7 +311,7 @@ function LoadedMovie({ movie, genres }: { movie?: Movie; genres: Genre[] }) {
               required
               maxLength={200}
               defaultValue={movie?.title}
-              placeholder="Ex.: Entre marés"
+              placeholder="Ex.: título do arquivo em public"
               onChange={(e) =>
                 setPreview({
                   ...preview,
@@ -320,6 +319,10 @@ function LoadedMovie({ movie, genres }: { movie?: Movie; genres: Genre[] }) {
                 })
               }
             />
+            <small className="muted">
+              O título precisa corresponder ao nome de uma imagem em public,
+              sem extensão; underscores são convertidos em espaços.
+            </small>
           </label>
           <div className="field-grid">
             <label className="field">
@@ -376,21 +379,6 @@ function LoadedMovie({ movie, genres }: { movie?: Movie; genres: Genre[] }) {
               defaultValue={movie?.synopsis || ''}
               placeholder="Uma breve apresentação da história…"
             />
-          </label>
-          <label className="field">
-            URL do pôster
-            <input
-              name="posterUrl"
-              type="url"
-              defaultValue={movie?.posterUrl || ''}
-              placeholder="https://exemplo.com/poster.jpg"
-              onChange={(e) =>
-                setPreview({ ...preview, posterUrl: e.target.value || null })
-              }
-            />
-            <small className="muted">
-              Informe uma URL pública de imagem ou use a arte padrão.
-            </small>
           </label>
           <fieldset className="genre-fieldset">
             <legend>Gêneros</legend>

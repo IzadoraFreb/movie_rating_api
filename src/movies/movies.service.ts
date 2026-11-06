@@ -1,15 +1,28 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovieDto, CreateReviewDto } from './movie.dto';
+import { findLocalMoviePoster, synchronizeMovieCatalog } from './movie-posters';
 import type { Prisma } from '../generated/prisma/client';
 
 @Injectable()
-export class MoviesService {
+export class MoviesService implements OnModuleInit {
+  private readonly logger = new Logger(MoviesService.name);
+
   constructor(private readonly prisma: PrismaService) {}
+
+  async onModuleInit(): Promise<void> {
+    const result = await synchronizeMovieCatalog(this.prisma);
+    this.logger.log(
+      `Catálogo sincronizado com ${result.total} cartazes: ${result.created} criados, ${result.updated} atualizados e ${result.removed} sem cartaz removidos.`,
+    );
+  }
 
   async list(
     search: string | undefined,
@@ -36,6 +49,7 @@ export class MoviesService {
       ...(year && Number.isInteger(Number(year))
         ? { releaseYear: Number(year) }
         : {}),
+      posterUrl: { startsWith: '/posters?title=' },
     };
     if (rating === 'unrated') where.reviews = { none: {} };
     else if (rating) {
@@ -81,7 +95,10 @@ export class MoviesService {
 
   async filters() {
     const years = await this.prisma.movie.findMany({
-      where: { releaseYear: { not: null } },
+      where: {
+        releaseYear: { not: null },
+        posterUrl: { startsWith: '/posters?title=' },
+      },
       distinct: ['releaseYear'],
       select: { releaseYear: true },
       orderBy: { releaseYear: 'desc' },
@@ -156,10 +173,16 @@ export class MoviesService {
   async create({ genreIds = [], ...input }: CreateMovieDto) {
     await this.validateGenres(genreIds);
     if (!input.title.trim()) throw new BadRequestException('Informe o título');
+    const poster = await findLocalMoviePoster(input.title.trim());
+    if (!poster)
+      throw new BadRequestException('O título precisa corresponder a um cartaz em public');
+    if (await this.prisma.movie.findFirst({ where: { title: poster.title } }))
+      throw new ConflictException('Já existe um filme com esse título');
     return this.prisma.movie.create({
       data: {
         ...input,
-        title: input.title.trim(),
+        title: poster.title,
+        posterUrl: poster.posterUrl,
         genres: { connect: genreIds.map((id) => ({ id })) },
       },
       include: { genres: true },
@@ -170,11 +193,21 @@ export class MoviesService {
     await this.getById(id);
     await this.validateGenres(genreIds);
     if (!input.title.trim()) throw new BadRequestException('Informe o título');
+    const poster = await findLocalMoviePoster(input.title.trim());
+    if (!poster)
+      throw new BadRequestException('O título precisa corresponder a um cartaz em public');
+    if (
+      await this.prisma.movie.findFirst({
+        where: { title: poster.title, id: { not: id } },
+      })
+    )
+      throw new ConflictException('Já existe um filme com esse título');
     return this.prisma.movie.update({
       where: { id },
       data: {
         ...input,
-        title: input.title.trim(),
+        title: poster.title,
+        posterUrl: poster.posterUrl,
         ...(genreIds
           ? { genres: { set: genreIds.map((id) => ({ id })) } }
           : {}),

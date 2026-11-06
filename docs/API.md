@@ -28,8 +28,8 @@ Authorization: Bearer <accessToken>
 | GET | `/api/movies/filters` | Público | Anos disponíveis no catálogo |
 | GET | `/api/movies/highlights` | Público | Seis filmes em destaque e três avaliações recentes para a página inicial, sem dados privados dos autores |
 | GET | `/api/movies/:id` | Público | Detalhes e avaliações do filme |
-| POST | `/api/movies` | Admin | Cadastrar filme (`title`, `releaseYear?`, `duration?`, `director?`, `synopsis?`, `posterUrl?`, `genreIds?`) |
-| PATCH | `/api/movies/:id` | Admin | Atualizar filme; título obrigatório; `genreIds: []` remove vínculos e `posterUrl: null` limpa o pôster |
+| POST | `/api/movies` | Admin | Cadastrar filme cujo `title` corresponda a um arquivo de cartaz local em `public`; demais campos (`releaseYear?`, `duration?`, `director?`, `synopsis?`, `genreIds?`) são opcionais |
+| PATCH | `/api/movies/:id` | Admin | Atualizar filme mantendo título correspondente a um cartaz em `public`; `genreIds: []` remove vínculos. O cartaz local não pode ser removido nem substituído por URL externa |
 | DELETE | `/api/movies/:id` | Admin | Excluir filme e os registros associados |
 | GET | `/api/movies/:id/activity` | Token | Estado de assistido, Watchlist e avaliação do usuário atual |
 | PUT | `/api/movies/:id/watched` | Token | Registrar como assistido sem exigir nota |
@@ -68,4 +68,4 @@ Na edição do próprio perfil, `displayName` aceita de 2 a 80 caracteres e `bio
 
 As imagens são salvas em `uploads/profiles`, fora do Git, ou no diretório definido em `PROFILE_UPLOAD_DIR`. Os nomes dos arquivos são gerados pelo servidor. A migração `20261105200000_profile_banner` adiciona o banner sem modificar os demais dados.
 
-`npm run db:seed` adiciona os 12 filmes, 8 gêneros, 6 contas e 8 avaliações de demonstração, preservando registros existentes. Funciona somente fora de produção. Consulte [frontapp/README.md](../frontapp/README.md) para iniciar o frontend e usar as contas de demonstração.
+`npm run db:seed` cria 8 gêneros e 6 contas de demonstração e sincroniza os filmes com imagens JPG, JPEG (incluindo `.jpe`), PNG ou WebP em `public`. O título é o nome do arquivo sem extensão, com underscores substituídos por espaços. A API repete essa sincronização ao iniciar, preserva registros e avaliações de filmes que continuam tendo cartaz e remove filmes sem imagem correspondente. A sincronização não cria filmes sem cartaz e funciona somente fora de produção para o seed. Consulte [frontapp/README.md](../frontapp/README.md) para iniciar o frontend e usar as contas de demonstração.
