@@ -67,8 +67,9 @@ export async function synchronizeMovieCatalog(prisma: PrismaService) {
 
   return prisma.$transaction(async (transaction) => {
     const existing = await transaction.movie.findMany({
+      where: { tmdbId: null },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-    });
+      });
     const retainedIds = new Set<string>();
     let created = 0;
     let updated = 0;

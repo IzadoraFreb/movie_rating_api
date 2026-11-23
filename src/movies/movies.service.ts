@@ -49,7 +49,6 @@ export class MoviesService implements OnModuleInit {
       ...(year && Number.isInteger(Number(year))
         ? { releaseYear: Number(year) }
         : {}),
-      posterUrl: { startsWith: '/posters?title=' },
     };
     if (rating === 'unrated') where.reviews = { none: {} };
     else if (rating) {
@@ -97,7 +96,6 @@ export class MoviesService implements OnModuleInit {
     const years = await this.prisma.movie.findMany({
       where: {
         releaseYear: { not: null },
-        posterUrl: { startsWith: '/posters?title=' },
       },
       distinct: ['releaseYear'],
       select: { releaseYear: true },

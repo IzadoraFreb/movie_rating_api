@@ -2,9 +2,14 @@ import {
   BadRequestException,
   Controller,
   Get,
+  Param,
   Query,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
 import { TmdbService } from './tmdb.service';
+import { JwtAuthGuard } from '../auth/auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 
 @Controller('tmdb')
 export class TmdbController {
@@ -37,4 +42,30 @@ export class TmdbController {
 
     return this.tmdbService.searchMovies(search, pageNumber);
   }
+
+  @Get('movies/:tmdbId')
+  details(@Param('tmdbId') tmdbId: string) {
+    const id = Number(tmdbId);
+
+    if (!Number.isSafeInteger(id) || id < 1) {
+      throw new BadRequestException(
+        'O identificador do filme deve ser um inteiro positivo.',
+      );
+    }
+
+    return this.tmdbService.getMovieDetails(id);
+  }
+  @Post('movies/:tmdbId/import')
+@UseGuards(JwtAuthGuard, AdminGuard)
+importMovie(@Param('tmdbId') tmdbId: string) {
+  const id = Number(tmdbId);
+
+  if (!Number.isSafeInteger(id) || id < 1) {
+    throw new BadRequestException(
+      'O identificador do filme deve ser um inteiro positivo.',
+    );
+  }
+
+  return this.tmdbService.importMovie(id);
+}
 }
