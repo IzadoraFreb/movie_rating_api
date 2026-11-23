@@ -1,15 +1,23 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, message } from '@/lib/api';
 import { RequireAuth } from '../../../components/AuthProvider';
+import {
+  Feedback,
+  PageTitle,
+  Poster,
+  Search,
+} from '../../../components/ui';
 
 type MovieResult = {
   tmdbId: number;
   title: string;
   synopsis: string | null;
   releaseYear: number | null;
+  posterPath: string | null;
 };
 
 type SearchResponse = {
@@ -29,12 +37,34 @@ export default function ImportMoviesPage() {
 
 function ImportMovies() {
   const router = useRouter();
+
   const [search, setSearch] = useState('');
-  const [movies, setMovies] = useState<MovieResult[]>([]);
+  const [submittedSearch, setSubmittedSearch] = useState('');
+  const [result, setResult] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState<number | null>(null);
   const [error, setError] = useState('');
-  const [searched, setSearched] = useState(false);
+
+  const busy = loading || importing !== null;
+  const totalPages = Math.min(result?.totalPages ?? 0, 500);
+
+  async function searchMovies(query: string, page: number) {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await api<SearchResponse>(
+        `/tmdb/search?q=${encodeURIComponent(query)}&page=${page}`,
+      );
+
+      setResult(response);
+      setSubmittedSearch(query);
+    } catch (error) {
+      setError(message(error));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,23 +76,7 @@ function ImportMovies() {
       return;
     }
 
-    setLoading(true);
-    setError('');
-    setMovies([]);
-    setSearched(false);
-
-    try {
-      const result = await api<SearchResponse>(
-        `/tmdb/search?q=${encodeURIComponent(query)}&page=1`,
-      );
-
-      setMovies(result.data);
-      setSearched(true);
-    } catch (error) {
-      setError(message(error));
-    } finally {
-      setLoading(false);
-    }
+    await searchMovies(query, 1);
   }
 
   async function handleImport(tmdbId: number) {
@@ -85,66 +99,133 @@ function ImportMovies() {
 
   return (
     <section>
-      <h1>Importar filmes</h1>
-      <p>Pesquise um título no TMDB para adicionar ao catálogo.</p>
+      <PageTitle
+        title="Importar do TMDB"
+        description="Pesquise um filme para adicionar ao catálogo."
+        action={
+          <Link className="button" href="/admin/filmes">
+            Voltar aos filmes
+          </Link>
+        }
+      />
 
       <form onSubmit={handleSearch}>
-        <label htmlFor="movie-search">Nome do filme</label>
-
-        <input
-          id="movie-search"
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Ex.: Interestelar"
-          required
-          disabled={loading || importing !== null}
-        />
-
-        <button
-          className="button"
-          type="submit"
-          disabled={loading || importing !== null}
+        <fieldset
+          disabled={busy}
+          style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
         >
-          {loading ? 'Pesquisando…' : 'Pesquisar'}
-        </button>
+          <div className="list-toolbar">
+            <Search
+              value={search}
+              onChange={setSearch}
+              placeholder="Buscar filme no TMDB"
+            />
+
+            <button className="button primary" type="submit">
+              {loading ? 'Pesquisando…' : 'Pesquisar'}
+            </button>
+          </div>
+        </fieldset>
       </form>
 
-      {error && <p role="alert">{error}</p>}
+      <Feedback error={error} />
 
-      {searched && movies.length === 0 && (
-        <p>Nenhum filme encontrado.</p>
-      )}
+      {loading && <p role="status">Carregando filmes…</p>}
 
-      <div aria-live="polite">
-        {movies.map((movie) => (
-          <article
-            key={movie.tmdbId}
-            style={{
-              padding: '16px 0',
-              borderBottom: '1px solid #777',
-            }}
-          >
-            <h2>
-              {movie.title}
-              {movie.releaseYear ? ` (${movie.releaseYear})` : ''}
-            </h2>
+      {!loading && result && (
+        <>
+          <p className="muted" role="status">
+            {result.total} resultados para “{submittedSearch}”.
+          </p>
 
-            <p>{movie.synopsis || 'Sinopse não disponível.'}</p>
+          {result.data.length === 0 && (
+            <p>Nenhum filme encontrado. Tente outro título.</p>
+          )}
 
-            <button
-              className="button"
-              type="button"
-              disabled={importing !== null || loading}
-              onClick={() => void handleImport(movie.tmdbId)}
+          {result.data.map((movie) => (
+            <article
+              key={movie.tmdbId}
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 20,
+                padding: '20px 0',
+                borderBottom: '1px solid #777',
+              }}
             >
-              {importing === movie.tmdbId
-                ? 'Importando…'
-                : 'Adicionar ao catálogo'}
-            </button>
-          </article>
-        ))}
-      </div>
+              <div style={{ width: 100, flexShrink: 0 }}>
+                <Poster
+                  slot="table"
+                  movie={{
+                    title: movie.title,
+                    posterUrl: movie.posterPath
+                      ? `https://image.tmdb.org/t/p/w500${movie.posterPath}`
+                      : null,
+                  }}
+                />
+              </div>
+
+              <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+                <h2>
+                  {movie.title}
+                  {movie.releaseYear
+                    ? ` (${movie.releaseYear})`
+                    : ''}
+                </h2>
+
+                <p>
+                  {movie.synopsis || 'Sinopse não disponível.'}
+                </p>
+
+                <button
+                  className="button primary"
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void handleImport(movie.tmdbId)}
+                >
+                  {importing === movie.tmdbId
+                    ? 'Importando…'
+                    : 'Adicionar ao catálogo'}
+                </button>
+              </div>
+            </article>
+          ))}
+
+          {totalPages > 1 && (
+            <nav
+              className="inline"
+              aria-label="Páginas dos resultados do TMDB"
+              style={{ marginTop: 24 }}
+            >
+              <button
+                className="button"
+                type="button"
+                disabled={busy || result.page <= 1}
+                onClick={() =>
+                  void searchMovies(submittedSearch, result.page - 1)
+                }
+              >
+                Anterior
+              </button>
+
+              <span aria-live="polite">
+                Página {result.page} de {totalPages}
+              </span>
+
+              <button
+                className="button"
+                type="button"
+                disabled={busy || result.page >= totalPages}
+                onClick={() =>
+                  void searchMovies(submittedSearch, result.page + 1)
+                }
+              >
+                Próxima
+              </button>
+            </nav>
+          )}
+        </>
+      )}
     </section>
   );
 }

@@ -360,21 +360,33 @@ export function Poster({
   movie,
   slot = 'catalog',
 }: {
-  movie: Movie;
+  movie: Pick<Movie, 'title' | 'posterUrl'>;
   slot?:
-    'catalog' | 'detail' | 'table' | 'history' | 'watchlist' | 'moderation';
+    | 'catalog'
+    | 'detail'
+    | 'table'
+    | 'history'
+    | 'watchlist'
+    | 'moderation';
 }) {
-  const local = '/posters?title=' + encodeURIComponent(movie.title);
-  const [failedLocal, setFailedLocal] = useImageFailure(local);
-  if (!failedLocal)
+  const src =
+    movie.posterUrl ||
+    '/posters?title=' + encodeURIComponent(movie.title);
+
+  const [failed, setFailed] = useImageFailure(src);
+
+  if (!failed) {
     return (
       <img
         className={'poster-image poster-image-' + slot}
-        src={local}
+        src={src}
         alt={'Pôster de ' + movie.title}
-        onError={setFailedLocal}
+        loading={slot === 'detail' ? 'eager' : 'lazy'}
+        onError={setFailed}
       />
     );
+  }
+
   return (
     <div
       role="img"
