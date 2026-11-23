@@ -10,6 +10,15 @@ export type LocalMoviePoster = {
   posterUrl: string;
 };
 
+export async function findLocalMoviePosterFile(title: string) {
+  const files = (await findImageFiles(publicDirectory)).sort((left, right) =>
+    left.localeCompare(right),
+  );
+  return files.find(
+    (file) => basename(file, extname(file)).replace(/_/g, ' ') === title,
+  );
+}
+
 async function findImageFiles(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
   const nested = await Promise.all(

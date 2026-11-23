@@ -14,6 +14,7 @@ class AppConfig {
     if (url == null || url.isEmpty) return null;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
     if (url.startsWith('/api/')) return '$apiOrigin$url';
+    if (url.startsWith('/posters?')) return '$apiBase$url';
     return '$webOrigin$url';
   }
 }
