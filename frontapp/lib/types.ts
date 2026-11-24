@@ -1,6 +1,7 @@
 export type Genre = { id: string; name: string; _count?: { movies: number } };
 export type Movie = {
   id: string;
+  tmdbId?: number | null;
   title: string;
   releaseYear: number | null;
   director: string | null;

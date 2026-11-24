@@ -6,6 +6,7 @@ import {
   Query,
   Post,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { TmdbService } from './tmdb.service';
 import { JwtAuthGuard } from '../auth/auth.guard';
@@ -67,5 +68,38 @@ importMovie(@Param('tmdbId') tmdbId: string) {
   }
 
   return this.tmdbService.importMovie(id);
+}
+@Patch('local-movies/:movieId/link/:tmdbId')
+@UseGuards(JwtAuthGuard, AdminGuard)
+linkMovie(
+  @Param('movieId') movieId: string,
+  @Param('tmdbId') tmdbId: string,
+) {
+  const id = Number(tmdbId);
+
+  if (!Number.isSafeInteger(id) || id < 1) {
+    throw new BadRequestException(
+      'O identificador do TMDB deve ser um inteiro positivo.',
+    );
+  }
+
+  return this.tmdbService.linkMovie(movieId, id);
+}
+
+@Patch('local-movies/:movieId/merge/:tmdbId')
+@UseGuards(JwtAuthGuard, AdminGuard)
+mergeMovie(
+  @Param('movieId') movieId: string,
+  @Param('tmdbId') tmdbId: string,
+) {
+  const id = Number(tmdbId);
+
+  if (!Number.isSafeInteger(id) || id < 1) {
+    throw new BadRequestException(
+      'O identificador do TMDB deve ser um inteiro positivo.',
+    );
+  }
+
+  return this.tmdbService.mergeMovie(movieId, id);
 }
 }

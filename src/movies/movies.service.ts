@@ -2,27 +2,17 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  Logger,
   NotFoundException,
-  OnModuleInit,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovieDto, CreateReviewDto } from './movie.dto';
-import { findLocalMoviePoster, synchronizeMovieCatalog } from './movie-posters';
+import { findLocalMoviePoster } from './movie-posters';
 import type { Prisma } from '../generated/prisma/client';
 
 @Injectable()
-export class MoviesService implements OnModuleInit {
-  private readonly logger = new Logger(MoviesService.name);
+export class MoviesService{
 
   constructor(private readonly prisma: PrismaService) {}
-
-  async onModuleInit(): Promise<void> {
-    const result = await synchronizeMovieCatalog(this.prisma);
-    this.logger.log(
-      `Catálogo sincronizado com ${result.total} cartazes: ${result.created} criados, ${result.updated} atualizados e ${result.removed} sem cartaz removidos.`,
-    );
-  }
 
   async list(
     search: string | undefined,
@@ -187,32 +177,79 @@ export class MoviesService implements OnModuleInit {
     });
   }
 
-  async update(id: string, { genreIds, ...input }: CreateMovieDto) {
-    await this.getById(id);
-    await this.validateGenres(genreIds);
-    if (!input.title.trim()) throw new BadRequestException('Informe o título');
-    const poster = await findLocalMoviePoster(input.title.trim());
-    if (!poster)
-      throw new BadRequestException('O título precisa corresponder a um cartaz em public');
-    if (
-      await this.prisma.movie.findFirst({
-        where: { title: poster.title, id: { not: id } },
-      })
-    )
-      throw new ConflictException('Já existe um filme com esse título');
+async update(id: string, { genreIds, ...input }: CreateMovieDto) {
+  const movie = await this.getById(id);
+
+  await this.validateGenres(genreIds);
+
+  const title = input.title.trim();
+
+  if (!title) {
+    throw new BadRequestException('Informe o título');
+  }
+
+  // Filmes do TMDB mantêm o pôster externo.
+  if (movie.tmdbId !== null) {
     return this.prisma.movie.update({
       where: { id },
       data: {
         ...input,
-        title: poster.title,
-        posterUrl: poster.posterUrl,
-        ...(genreIds
-          ? { genres: { set: genreIds.map((id) => ({ id })) } }
+        title,
+        ...(genreIds !== undefined
+          ? {
+              genres: {
+                set: genreIds.map((genreId) => ({
+                  id: genreId,
+                })),
+              },
+            }
           : {}),
       },
       include: { genres: true },
     });
   }
+
+  // Filmes locais continuam usando os cartazes de public.
+  const poster = await findLocalMoviePoster(title);
+
+  if (!poster) {
+    throw new BadRequestException(
+      'O título precisa corresponder a um cartaz em public',
+    );
+  }
+
+  const duplicate = await this.prisma.movie.findFirst({
+    where: {
+      title: poster.title,
+      id: { not: id },
+    },
+  });
+
+  if (duplicate) {
+    throw new ConflictException(
+      'Já existe um filme com esse título',
+    );
+  }
+
+  return this.prisma.movie.update({
+    where: { id },
+    data: {
+      ...input,
+      title: poster.title,
+      posterUrl: poster.posterUrl,
+      ...(genreIds !== undefined
+        ? {
+            genres: {
+              set: genreIds.map((genreId) => ({
+                id: genreId,
+              })),
+            },
+          }
+        : {}),
+    },
+    include: { genres: true },
+  });
+}
 
   async remove(id: string) {
     await this.getById(id);

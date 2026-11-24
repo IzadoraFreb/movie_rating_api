@@ -87,10 +87,11 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <main id="conteudo" className="public-main">
         {children}
       </main>
-      <footer className="site-footer">
-        <span>Um lugar para descobrir, assistir e registrar.</span>
+    <footer className="site-footer">
+      <span>Um lugar para descobrir, assistir e registrar.</span>
+      <Link href="/creditos">Créditos</Link>
         <span>Catálogo de filmes · 2026</span>
-      </footer>
+    </footer>
     </div>
   );
 }

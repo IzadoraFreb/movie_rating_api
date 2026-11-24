@@ -160,4 +160,24 @@ class ApiService {
   Future<void> unfollow(String username) async {
     await client.delete('/users/${Uri.encodeComponent(username)}/follow');
   }
+
+  Future<List<Map<String, dynamic>>> searchTmdb(String query) async {
+  final json = await client.get(
+    '/tmdb/search',
+    query: {
+      'q': query,
+      'page': 1,
+    },
+  );
+
+  return jList(json['data']);
+}
+
+Future<Movie> importTmdb(int tmdbId) async {
+  final json = await client.post(
+    '/tmdb/movies/$tmdbId/import',
+  );
+
+  return Movie.fromJson(jMap(json)!);
+}
 }

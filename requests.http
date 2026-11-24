@@ -27,3 +27,47 @@ GET {{baseUrl}}/movies/{{importarFilme.response.body.$.id}}
 ### 6. Repetir a importação: deve retornar o mesmo id
 POST {{baseUrl}}/tmdb/movies/808/import
 Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+
+
+### Buscar o registro antigo no banco local
+GET {{baseUrl}}/movies?q=Shrek
+
+### Pesquisar os candidatos no TMDB
+GET {{baseUrl}}/tmdb/search?q=Shrek
+
+
+
+### Vincular o filme antigo ao TMDB
+PATCH {{baseUrl}}/tmdb/local-movies/cmwo86cpc000b3qlwf2otg4kg/link/808
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+
+
+
+
+### Conferir avaliações do filme vinculado
+GET {{baseUrl}}/movies/COLE_O_ID_ANTIGO
+
+
+
+### Consultar Shrek antigo
+GET {{baseUrl}}/movies/cmwo86cpc000b3qlwf2otg4kg
+
+### Consultar Shrek importado
+GET {{baseUrl}}/movies/cmwtu979y000281lww8guijpt
+
+
+### Unir Shrek importado ao registro antigo
+PATCH {{baseUrl}}/tmdb/local-movies/cmwo86cpc000b3qlwf2otg4kg/merge/808
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+
+### Conferir o registro preservado
+GET {{baseUrl}}/movies/cmwo86cpc000b3qlwf2otg4kg
+
+### Conferir que a duplicata foi removida
+GET {{baseUrl}}/movies/cmwtu979y000281lww8guijpt
+
+### Conferir a busca no catálogo
+GET {{baseUrl}}/movies?q=Shrek
+
+
+
