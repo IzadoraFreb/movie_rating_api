@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   const title = request.nextUrl.searchParams.get('title')?.trim();
   if (!title) return new Response('Título obrigatório', { status: 400 });
 
-  const directory = resolve(process.cwd(), '..', 'public');
+  const directory = resolve(process.cwd(), '..', 'api', 'public');
   const target = normalizeTitle(title);
   const files = (await imageFiles(directory))
     .filter((file) => imageTypes[extname(file).toLowerCase()])

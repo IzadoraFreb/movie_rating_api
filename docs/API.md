@@ -4,6 +4,8 @@ API REST em NestJS com SQLite e Prisma. As rotas usam o prefixo `/api`.
 
 ## Executar localmente
 
+Execute os comandos abaixo dentro de `api/` (`cd api` a partir da raiz do repositório). Caminhos como `.env`, `public` e `uploads` nesta página são relativos a essa pasta.
+
 1. Copie `.env.example` para `.env` e defina um `JWT_SECRET` longo e aleatório.
 2. Instale dependências: `npm install`.
 	Se o npm bloquear o script nativo do SQLite, execute `npm install-scripts approve better-sqlite3` e `npm rebuild better-sqlite3`.
@@ -29,7 +31,7 @@ Authorization: Bearer <accessToken>
 | GET | `/api/movies/highlights` | Público | Seis filmes em destaque e três avaliações recentes para a página inicial, sem dados privados dos autores |
 | GET | `/api/movies/:id` | Público | Detalhes e avaliações do filme |
 | POST | `/api/movies` | Admin | Cadastrar filme cujo `title` corresponda a um arquivo de cartaz local em `public`; demais campos (`releaseYear?`, `duration?`, `director?`, `synopsis?`, `genreIds?`) são opcionais |
-| PATCH | `/api/movies/:id` | Admin | Atualizar filme mantendo título correspondente a um cartaz em `public`; `genreIds: []` remove vínculos. O cartaz local não pode ser removido nem substituído por URL externa |
+| PATCH | `/api/movies/:id` | Admin | Atualizar filme; títulos locais exigem cartaz em `public`, enquanto filmes vinculados ao TMDB preservam seu pôster externo. `genreIds: []` remove vínculos |
 | DELETE | `/api/movies/:id` | Admin | Excluir filme e os registros associados |
 | GET | `/api/movies/:id/activity` | Token | Estado de assistido, Watchlist e avaliação do usuário atual |
 | PUT | `/api/movies/:id/watched` | Token | Registrar como assistido sem exigir nota |
@@ -68,4 +70,6 @@ Na edição do próprio perfil, `displayName` aceita de 2 a 80 caracteres e `bio
 
 As imagens são salvas em `uploads/profiles`, fora do Git, ou no diretório definido em `PROFILE_UPLOAD_DIR`. Os nomes dos arquivos são gerados pelo servidor. A migração `20261105200000_profile_banner` adiciona o banner sem modificar os demais dados.
 
-`npm run db:seed` cria 8 gêneros e 6 contas de demonstração e sincroniza os filmes com imagens JPG, JPEG (incluindo `.jpe`), PNG ou WebP em `public`. O título é o nome do arquivo sem extensão, com underscores substituídos por espaços. A API repete essa sincronização ao iniciar, preserva registros e avaliações de filmes que continuam tendo cartaz e remove filmes sem imagem correspondente. A sincronização não cria filmes sem cartaz e funciona somente fora de produção para o seed. Consulte [frontapp/README.md](../frontapp/README.md) para iniciar o frontend e usar as contas de demonstração.
+`npm run db:seed` cria 8 gêneros e 6 contas de demonstração, sem importar filmes. O backend não sincroniza mais o catálogo automaticamente com `public`. Filmes locais existentes são preservados; novos filmes podem ser cadastrados manualmente com cartaz local ou importados do TMDB por um administrador. O token de leitura fica em `api/.env`, na variável `TMDB_READ_ACCESS_TOKEN`.
+
+Consulte o [README do repositório](../README.md) para iniciar API, frontend e mobile, importar filmes e usar as contas de demonstração. Os exemplos REST Client estão em [api/requests.http](../api/requests.http).

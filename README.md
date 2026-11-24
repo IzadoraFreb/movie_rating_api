@@ -6,6 +6,21 @@ alunos: Henrique Tonello Zotti(210561), Marianne Fisch(209704), Izadora Freb da 
 
 Aplicação acadêmica com API NestJS, banco SQLite gerenciado pelo Prisma, frontend Next.js/React/TypeScript e aplicativo Flutter em `mobile`. A versão web implementa o [protótipo no Figma](https://www.figma.com/design/Yc3G5sqB9UNGAKxabxWalZ/Prototipo-front-end). Web e mobile usam a mesma API e compartilham filmes, avaliações, Watchlist e histórico. O TMDB fornece os dados e pôsteres dos filmes importados.
 
+## Estrutura do repositório
+
+```text
+movie_rating_api/
+├── api/          # Backend NestJS, Prisma, banco e arquivos locais
+├── frontapp/     # Aplicação web Next.js
+├── mobile/       # Aplicativo Flutter
+├── docs/         # Documentação compartilhada
+└── README.md
+```
+
+Cada aplicação tem suas próprias dependências e comandos. Execute os comandos npm do backend dentro de `api/`, os do site dentro de `frontapp/` e os do Flutter dentro de `mobile/`. Não há `package.json` na raiz.
+
+O backend concentra `src/`, `prisma/`, `scripts/`, `test/`, `public/`, `uploads/`, `.env`, `.env.example`, `requests.http` e as configurações do NestJS, Prisma e TypeScript. O banco local padrão fica em `api/dev.db`; uploads ficam em `api/uploads/profiles`. `.env`, bancos, uploads e dependências permanecem fora do Git.
+
 ## Executar o projeto
 
 Tenha Node.js e npm instalados. Para o aplicativo mobile, também é necessário Flutter com um dispositivo ou emulador configurado. A busca no TMDB e o carregamento dos pôsteres externos precisam de acesso à internet.
@@ -14,22 +29,23 @@ Tenha Node.js e npm instalados. Para o aplicativo mobile, também é necessário
 
 1. Crie uma conta no [TMDB](https://www.themoviedb.org/) e solicite uma credencial na seção **API** das configurações da conta, informando o uso acadêmico e não comercial do projeto.
 2. Copie o **API Read Access Token**, usado como Bearer pelo backend.
-3. Na primeira configuração, copie `.env.example` para `.env` na raiz. Se o `.env` já existir, preserve suas configurações e acrescente ou preencha apenas a variável necessária.
-4. No `.env`, configure:
+3. Na primeira configuração, copie `api/.env.example` para `api/.env`. Se o `.env` já existir, preserve suas configurações e acrescente ou preencha apenas a variável necessária.
+4. No `api/.env`, configure:
 
 ```env
 TMDB_READ_ACCESS_TOKEN=cole_seu_token_aqui
 ```
 
-O `.env.example` mantém `TMDB_READ_ACCESS_TOKEN=` vazio, como modelo. O token real fica somente no `.env` do backend, que é ignorado pelo Git; não o coloque no frontend, no Flutter ou no repositório. Reinicie o backend após alterar a variável.
+O `api/.env.example` mantém `TMDB_READ_ACCESS_TOKEN=` vazio, como modelo. O token real fica somente no `api/.env` do backend, que é ignorado pelo Git; não o coloque no frontend, no Flutter ou no repositório. Reinicie o backend após alterar a variável.
 
-As outras variáveis do backend estão no modelo `.env.example`: `DATABASE_URL`, `JWT_SECRET`, `PORT`, `CORS_ORIGIN` e `PROFILE_UPLOAD_DIR`. Configure um `JWT_SECRET` próprio. A configuração padrão do banco usa `dev.db` na raiz.
+As outras variáveis do backend estão no modelo `api/.env.example`: `DATABASE_URL`, `JWT_SECRET`, `PORT`, `CORS_ORIGIN` e `PROFILE_UPLOAD_DIR`. Configure um `JWT_SECRET` próprio. A configuração padrão do banco usa `api/dev.db`. Caminhos relativos no `.env` são resolvidos a partir de `api/` ao executar o backend nessa pasta; se usar caminhos absolutos personalizados, confira se continuam apontando para os arquivos corretos.
 
 ### Backend
 
-Na raiz do repositório, para uma instalação nova:
+A partir da raiz do repositório, para uma instalação nova:
 
 ```bash
+cd api
 npm install
 cp .env.example .env
 npm run db:generate
@@ -38,17 +54,18 @@ npm run db:seed
 npm run start:dev
 ```
 
-Antes de iniciar a API, preencha o `.env` conforme a seção anterior. Não sobrescreva um `.env` existente ao repetir a instalação.
+Antes de iniciar a API, preencha `api/.env` conforme a seção anterior. Não sobrescreva um `.env` existente ao repetir a instalação.
 
-O seed cria contas e gêneros de demonstração; ele não importa filmes nem sincroniza o catálogo com `public`. Um banco novo começa sem filmes. Use a importação do TMDB ou o cadastro manual para preenchê-lo. Não execute o seed em produção.
+O seed cria contas e gêneros de demonstração; ele não importa filmes nem sincroniza o catálogo com `api/public`. Um banco novo começa sem filmes. Use a importação do TMDB ou o cadastro manual para preenchê-lo. Não execute o seed em produção.
 
-O backend não sincroniza mais o catálogo ao iniciar. Os filmes existentes permanecem no banco. Para atualizar um banco existente, faça backup e execute `npm run db:generate` e `npm run db:deploy`; não é necessário repetir o seed.
+O backend não sincroniza mais o catálogo ao iniciar. Os filmes existentes permanecem no banco. Para atualizar um banco existente, faça backup e, dentro de `api/`, execute `npm run db:generate` e `npm run db:deploy`; não é necessário repetir o seed.
 
 ### Frontend web
 
-Em outro terminal, dentro de `frontapp`:
+Em outro terminal, a partir da raiz:
 
 ```bash
+cd frontapp
 npm install
 npm run dev
 ```
@@ -100,8 +117,8 @@ A tela mobile consulta somente a primeira página dos resultados. O botão de im
 - `Movie.id` é o identificador interno usado nas avaliações, Watchlist e registros de assistido; `Movie.tmdbId` identifica o filme no TMDB.
 - Reimportar o mesmo `tmdbId` devolve o registro existente, sem criar outra cópia nem atualizar automaticamente sua ficha.
 - Filmes importados podem ser editados no painel web sem exigir cartaz local; o vínculo com o TMDB e o pôster são preservados.
-- Filmes antigos sem vínculo continuam usando as imagens de `public`. Mantenha esses arquivos. O cadastro e a edição manual de filmes locais ainda exigem um título correspondente ao nome do cartaz, sem extensão e com underscores convertidos em espaços.
-- Adicionar uma imagem a `public` e reiniciar a API não cadastra mais um filme automaticamente.
+- Filmes antigos sem vínculo continuam usando as imagens de `api/public`. Mantenha esses arquivos. O cadastro e a edição manual de filmes locais ainda exigem um título correspondente ao nome do cartaz, sem extensão e com underscores convertidos em espaços.
+- Adicionar uma imagem a `api/public` e reiniciar a API não cadastra mais um filme automaticamente.
 - As avaliações da comunidade são independentes do TMDB e usam a escala de 1 a 5.
 - Como web e mobile usam o mesmo backend, um filme importado em um fica disponível no outro ao atualizar o catálogo.
 
@@ -117,7 +134,7 @@ As operações de importação, associação e união abaixo exigem o JWT de log
 | `PATCH /tmdb/local-movies/:movieId/link/:tmdbId` | Atualizar um filme antigo com os dados do TMDB, preservando seu ID |
 | `PATCH /tmdb/local-movies/:movieId/merge/:tmdbId` | Unir uma duplicata importada ao filme antigo |
 
-As duas consultas `GET` são públicas; a exigência de administrador se aplica à importação, associação e união. Há exemplos de requisições em `requests.http`, executáveis com a extensão REST Client do VS Code.
+As duas consultas `GET` são públicas; a exigência de administrador se aplica à importação, associação e união. Há exemplos de requisições em `api/requests.http`, executáveis com a extensão REST Client do VS Code.
 
 Antes de associar ou unir registros, faça backup do banco e confira título e ano. A associação retorna `409 Conflict` se o identificador do TMDB já pertencer a outro registro ou se o filme antigo estiver vinculado a outro TMDB.
 
@@ -131,7 +148,7 @@ Os requisitos de atribuição e uso estão na [documentação oficial do TMDB](h
 
 ## Contas de demonstração
 
-Após `npm run db:seed` na raiz:
+Após `npm run db:seed` dentro de `api/`:
 
 | Perfil | E-mail | Senha de desenvolvimento |
 | --- | --- | --- |
@@ -163,11 +180,11 @@ Após `npm run db:seed` na raiz:
 
 As rotas de formulário usam `/novo` e `/:id/editar`. O administrador visualiza uma avaliação em `/admin/avaliacoes/:id`. A rota antiga `/admin/users` redireciona para `/admin/usuarios`.
 
-A interface usa CSS próprio com os tokens do protótipo, fonte Inter local e SVGs locais em `public/figma`. Não depende do Bootstrap, de CDNs de fontes ou de URLs temporárias do Figma. Pôsteres locais e URLs de pôsteres do TMDB são exibidos com uma imagem alternativa se o carregamento falhar.
+A interface usa CSS próprio com os tokens do protótipo, fonte Inter local e SVGs locais em `frontapp/public/figma`. Não depende do Bootstrap, de CDNs de fontes ou de URLs temporárias do Figma. Pôsteres locais e URLs de pôsteres do TMDB são exibidos com uma imagem alternativa se o carregamento falhar.
 
 Para personalizar a conta, clique no seu nome ou foto no cabeçalho e acesse **Editar perfil**. É possível trocar ou remover a foto e o banner, editar o nome de exibição e escrever uma descrição de até 500 caracteres. As imagens são selecionadas no computador ou celular e só são enviadas ao salvar. São aceitos PNG, JPG e WebP de até 5 MB cada. A prévia mostra o recorte circular da foto e o recorte horizontal do banner; cancelar descarta as alterações. A foto salva aparece no cabeçalho e nas avaliações, e o banner e a descrição aparecem na área pessoal.
 
-Após atualizar um checkout existente, execute `npm run db:generate` e `npm run db:deploy` na raiz para aplicar as migrações, incluindo os campos de banner e de integração com o TMDB. As imagens ficam no backend em `uploads/profiles` (configurável por `PROFILE_UPLOAD_DIR`), e essa pasta deve ser preservada junto com o banco.
+Após atualizar um checkout existente, execute `npm run db:generate` e `npm run db:deploy` dentro de `api/` para aplicar as migrações, incluindo os campos de banner e de integração com o TMDB. As imagens ficam no backend em `api/uploads/profiles` (configurável por `PROFILE_UPLOAD_DIR`), e essa pasta deve ser preservada junto com o banco.
 
 O nome e a foto no cabeçalho abrem `/perfil/:username`, uma página com informações e avaliações publicadas. O botão **Minha área** abre o histórico e a Watchlist. **Editar perfil** aparece apenas na página do próprio perfil; visitantes não veem essa ação nem o e-mail da conta.
 
@@ -176,7 +193,7 @@ Os nomes e avatares nas avaliações de filmes, nas avaliações recentes do in�
 ## Verificações
 
 ```bash
-# Na raiz: build e testes de integração da API
+# Em api: build e testes de integração da API
 npm run build
 npm run test:flows
 
@@ -192,6 +209,8 @@ flutter analyze
 ```
 
 `test:e2e` compila ambos os projetos e executa os fluxos no Chromium com um banco temporário, removido no fim. Use um Chromium instalado em `/usr/bin/chromium`, configure `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, ou execute `npx playwright install chromium`. Os testes usam as portas 4300 e 4301. Capturas de desktop/celular e traces de falhas ficam em `test-results/`.
+
+Os testes preparam seus filmes com `api/test/seed-catalog.mjs`, exclusivamente em ambiente de teste; o seed normal continua sem importar filmes. Para conferir especificamente a integração entre as pastas, execute `npm run test:e2e -- tests/structure.spec.ts` dentro de `frontapp/`.
 
 ### Conferência manual da integração
 
