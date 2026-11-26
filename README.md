@@ -56,9 +56,7 @@ npm run start:dev
 
 Antes de iniciar a API, preencha `api/.env` conforme a seção anterior. Não sobrescreva um `.env` existente ao repetir a instalação.
 
-O seed cria contas e gêneros de demonstração; ele não importa filmes nem sincroniza o catálogo com `api/public`. Um banco novo começa sem filmes. Use a importação do TMDB ou o cadastro manual para preenchê-lo. Não execute o seed em produção.
-
-O backend não sincroniza mais o catálogo ao iniciar. Os filmes existentes permanecem no banco. Para atualizar um banco existente, faça backup e, dentro de `api/`, execute `npm run db:generate` e `npm run db:deploy`; não é necessário repetir o seed.
+O seed cria contas e gêneros de demonstração. O catálogo começa vazio: entre com uma conta de administrador e siga a seção **Importar filmes do TMDB** para adicionar os primeiros títulos. Também é possível cadastrar filmes manualmente pelo painel web, usando cartazes locais. Não execute o seed em produção.
 
 ### Frontend web
 
@@ -117,28 +115,9 @@ A tela mobile consulta somente a primeira página dos resultados. O botão de im
 - `Movie.id` é o identificador interno usado nas avaliações, Watchlist e registros de assistido; `Movie.tmdbId` identifica o filme no TMDB.
 - Reimportar o mesmo `tmdbId` devolve o registro existente, sem criar outra cópia nem atualizar automaticamente sua ficha.
 - Filmes importados podem ser editados no painel web sem exigir cartaz local; o vínculo com o TMDB e o pôster são preservados.
-- Filmes antigos sem vínculo continuam usando as imagens de `api/public`. Mantenha esses arquivos. O cadastro e a edição manual de filmes locais ainda exigem um título correspondente ao nome do cartaz, sem extensão e com underscores convertidos em espaços.
-- Adicionar uma imagem a `api/public` e reiniciar a API não cadastra mais um filme automaticamente.
+- Para cadastrar um filme manualmente, coloque o cartaz em `api/public` e use no painel web um título correspondente ao nome do arquivo, sem extensão e com underscores convertidos em espaços. Apenas adicionar o cartaz não cadastra o filme.
 - As avaliações da comunidade são independentes do TMDB e usam a escala de 1 a 5.
 - Como web e mobile usam o mesmo backend, um filme importado em um fica disponível no outro ao atualizar o catálogo.
-
-### Vincular filmes antigos e resolver duplicatas
-
-As operações de importação, associação e união abaixo exigem o JWT de login de um administrador, no cabeçalho `Authorization: Bearer SEU_TOKEN_DE_LOGIN`. Esse token é diferente do token do TMDB configurado no `.env`.
-
-| Método e rota, com prefixo `/api` | Função |
-| --- | --- |
-| `GET /tmdb/search?q=Shrek&page=1` | Pesquisar títulos no TMDB |
-| `GET /tmdb/movies/:tmdbId` | Consultar a ficha externa sem salvar |
-| `POST /tmdb/movies/:tmdbId/import` | Importar ou devolver o filme existente |
-| `PATCH /tmdb/local-movies/:movieId/link/:tmdbId` | Atualizar um filme antigo com os dados do TMDB, preservando seu ID |
-| `PATCH /tmdb/local-movies/:movieId/merge/:tmdbId` | Unir uma duplicata importada ao filme antigo |
-
-As duas consultas `GET` são públicas; a exigência de administrador se aplica à importação, associação e união. Há exemplos de requisições em `api/requests.http`, executáveis com a extensão REST Client do VS Code.
-
-Antes de associar ou unir registros, faça backup do banco e confira título e ano. A associação retorna `409 Conflict` se o identificador do TMDB já pertencer a outro registro ou se o filme antigo estiver vinculado a outro TMDB.
-
-A união preserva o ID do filme antigo, transfere Watchlist e registros de assistido da duplicata e remove o registro importado em uma transação. Se o mesmo usuário já tiver uma dessas relações no antigo, a entrada antiga é mantida. A operação é bloqueada quando a duplicata importada possui avaliações; nesse caso, os dados precisam ser revisados antes de continuar. As avaliações do filme antigo são preservadas.
 
 ### Créditos
 
@@ -178,13 +157,13 @@ Após `npm run db:seed` dentro de `api/`:
 | `/admin/usuarios` | Pesquisa, filtros e edição de contas |
 | `/admin/avaliacoes` | Consulta e moderação de avaliações |
 
-As rotas de formulário usam `/novo` e `/:id/editar`. O administrador visualiza uma avaliação em `/admin/avaliacoes/:id`. A rota antiga `/admin/users` redireciona para `/admin/usuarios`.
+As rotas de formulário usam `/novo` e `/:id/editar`. O administrador visualiza uma avaliação em `/admin/avaliacoes/:id`.
 
 A interface usa CSS próprio com os tokens do protótipo, fonte Inter local e SVGs locais em `frontapp/public/figma`. Não depende do Bootstrap, de CDNs de fontes ou de URLs temporárias do Figma. Pôsteres locais e URLs de pôsteres do TMDB são exibidos com uma imagem alternativa se o carregamento falhar.
 
 Para personalizar a conta, clique no seu nome ou foto no cabeçalho e acesse **Editar perfil**. É possível trocar ou remover a foto e o banner, editar o nome de exibição e escrever uma descrição de até 500 caracteres. As imagens são selecionadas no computador ou celular e só são enviadas ao salvar. São aceitos PNG, JPG e WebP de até 5 MB cada. A prévia mostra o recorte circular da foto e o recorte horizontal do banner; cancelar descarta as alterações. A foto salva aparece no cabeçalho e nas avaliações, e o banner e a descrição aparecem na área pessoal.
 
-Após atualizar um checkout existente, execute `npm run db:generate` e `npm run db:deploy` dentro de `api/` para aplicar as migrações, incluindo os campos de banner e de integração com o TMDB. As imagens ficam no backend em `api/uploads/profiles` (configurável por `PROFILE_UPLOAD_DIR`), e essa pasta deve ser preservada junto com o banco.
+As imagens ficam no backend em `api/uploads/profiles` (configurável por `PROFILE_UPLOAD_DIR`), e essa pasta deve ser preservada junto com o banco.
 
 O nome e a foto no cabeçalho abrem `/perfil/:username`, uma página com informações e avaliações publicadas. O botão **Minha área** abre o histórico e a Watchlist. **Editar perfil** aparece apenas na página do próprio perfil; visitantes não veem essa ação nem o e-mail da conta.
 
@@ -221,14 +200,4 @@ Os testes preparam seus filmes com `api/test/seed-catalog.mjs`, exclusivamente e
 5. Reinicie o backend e confira que filmes e atividades continuam salvos.
 6. Confira que usuários comuns não têm acesso à importação e que os créditos aparecem nas duas versões.
 
-## Referência visual
-
-Foram obtidos contexto de implementação e render de 12 das 15 telas. O limite do plano Figma impediu a consulta final destas três:
-
-- Gêneros — listagem: `5:20435`.
-- Formulário de filme: `5:20935`.
-- Editar avaliação pessoal: `5:21304`.
-
-Essas três telas foram implementadas usando os componentes e estilos das telas acessíveis e a estrutura identificada no arquivo. A conferência visual exata delas depende de uma exportação ou de novo acesso ao Figma. Os layouts de celular foram adaptados a partir do protótipo desktop.
-
-A API e as regras de acesso estão documentadas em [docs/API.md](docs/API.md).
+A API e as regras de acesso estão documentadas em [docs/API.md](docs/API.md). Para atualizar uma instalação de uma versão anterior, consulte [docs/MIGRACAO.md](docs/MIGRACAO.md).
