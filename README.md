@@ -200,4 +200,4 @@ Os testes preparam seus filmes com `api/test/seed-catalog.mjs`, exclusivamente e
 5. Reinicie o backend e confira que filmes e atividades continuam salvos.
 6. Confira que usuários comuns não têm acesso à importação e que os créditos aparecem nas duas versões.
 
-A API e as regras de acesso estão documentadas em [docs/API.md](docs/API.md). Para atualizar uma instalação de uma versão anterior, consulte [docs/MIGRACAO.md](docs/MIGRACAO.md).
+A API e as regras de acesso estão documentadas em [docs/API.md](docs/API.md).

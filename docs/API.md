@@ -37,6 +37,9 @@ Authorization: Bearer <accessToken>
 | PUT | `/api/movies/:id/watched` | Token | Registrar como assistido sem exigir nota |
 | PUT | `/api/movies/:id/review` | Token | Criar/atualizar avaliação (`rating` de 1 a 5, `comment?`, `watchedAt?`) |
 | DELETE | `/api/movies/:id/review` | Token | Remover sua avaliação |
+| GET | `/api/tmdb/search?q=&page=1` | Público | Pesquisar filmes no TMDB |
+| GET | `/api/tmdb/movies/:tmdbId` | Público | Consultar a ficha do TMDB sem salvar |
+| POST | `/api/tmdb/movies/:tmdbId/import` | Admin | Importar filme ou devolver o registro já importado, sem atualizar sua ficha |
 | GET | `/api/users/:username` | Público | Perfil e contagens sociais |
 | GET | `/api/users/:username/reviews` | Público | Diário de filmes avaliados |
 | GET | `/api/users/:username/followers` | Público | Seguidores |
@@ -64,12 +67,12 @@ Authorization: Bearer <accessToken>
 
 Há uma avaliação por usuário e filme; enviar `PUT` novamente substitui a anterior e registra o filme como assistido na mesma transação. Remover a avaliação preserva o histórico de assistidos. Médias são calculadas a partir das notas existentes. Administradores são verificados no banco a cada ação protegida e não podem remover o próprio acesso administrativo.
 
-O banco usa migrações Prisma; a nova migração preserva os registros existentes e converte avaliações anteriores em histórico de assistidos. A API valida payloads, rejeitando campos desconhecidos. Os perfis públicos não expõem e-mail nem senha.
+O banco é criado e atualizado pelas migrações Prisma. A API valida payloads, rejeitando campos desconhecidos. Os perfis públicos não expõem e-mail nem senha.
 
 Na edição do próprio perfil, `displayName` aceita de 2 a 80 caracteres e `bio`, até 500. Foto e banner aceitam PNG, JPG ou WebP, com limite de 5 MB por arquivo. Use `removeAvatar=true` ou `removeBanner=true` para remover imagens; campos omitidos preservam o valor anterior. O usuário só altera a conta identificada pelo token. Campos administrativos, como `role` ou `userId`, são rejeitados nessa rota.
 
-As imagens são salvas em `uploads/profiles`, fora do Git, ou no diretório definido em `PROFILE_UPLOAD_DIR`. Os nomes dos arquivos são gerados pelo servidor. A migração `20261105200000_profile_banner` adiciona o banner sem modificar os demais dados.
+As imagens de perfil e de banner são salvas em `uploads/profiles`, fora do Git, ou no diretório definido em `PROFILE_UPLOAD_DIR`. Os nomes dos arquivos são gerados pelo servidor.
 
-`npm run db:seed` cria 8 gêneros e 6 contas de demonstração, sem importar filmes. O backend não sincroniza mais o catálogo automaticamente com `public`. Filmes locais existentes são preservados; novos filmes podem ser cadastrados manualmente com cartaz local ou importados do TMDB por um administrador. O token de leitura fica em `api/.env`, na variável `TMDB_READ_ACCESS_TOKEN`.
+`npm run db:seed` cria 8 gêneros e 6 contas de demonstração. O catálogo começa vazio e pode ser preenchido por um administrador, importando filmes do TMDB ou cadastrando filmes manualmente com cartazes locais em `public`. Adicionar um cartaz nessa pasta não cadastra o filme automaticamente. O token de leitura do TMDB fica em `api/.env`, na variável `TMDB_READ_ACCESS_TOKEN`.
 
 Consulte o [README do repositório](../README.md) para iniciar API, frontend e mobile, importar filmes e usar as contas de demonstração. Os exemplos REST Client estão em [api/requests.http](../api/requests.http).

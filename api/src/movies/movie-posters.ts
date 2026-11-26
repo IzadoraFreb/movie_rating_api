@@ -1,6 +1,5 @@
 import { readdir } from 'node:fs/promises';
 import { basename, extname, resolve } from 'node:path';
-import type { PrismaService } from '../prisma/prisma.service';
 
 const supportedExtensions = new Set(['.jpg', '.jpeg', '.jpe', '.png', '.webp']);
 const publicDirectory = resolve(__dirname, '..', '..', 'public');
@@ -60,50 +59,4 @@ export async function findLocalMoviePoster(
   title: string,
 ): Promise<LocalMoviePoster | undefined> {
   return (await getLocalMoviePosters()).find((poster) => poster.title === title);
-}
-
-export async function synchronizeMovieCatalog(prisma: PrismaService) {
-  const posters = await getLocalMoviePosters();
-
-  return prisma.$transaction(async (transaction) => {
-    const existing = await transaction.movie.findMany({
-      where: { tmdbId: null },
-      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      });
-    const retainedIds = new Set<string>();
-    let created = 0;
-    let updated = 0;
-
-    for (const poster of posters) {
-      const current = existing.find(
-        (movie) => movie.title === poster.title && !retainedIds.has(movie.id),
-      );
-
-      if (current) {
-        retainedIds.add(current.id);
-        if (current.posterUrl !== poster.posterUrl) {
-          await transaction.movie.update({
-            where: { id: current.id },
-            data: { posterUrl: poster.posterUrl },
-          });
-          updated += 1;
-        }
-      } else {
-        const movie = await transaction.movie.create({
-          data: { title: poster.title, posterUrl: poster.posterUrl },
-        });
-        retainedIds.add(movie.id);
-        created += 1;
-      }
-    }
-
-    const obsoleteIds = existing
-      .filter((movie) => !retainedIds.has(movie.id))
-      .map((movie) => movie.id);
-    if (obsoleteIds.length > 0) {
-      await transaction.movie.deleteMany({ where: { id: { in: obsoleteIds } } });
-    }
-
-    return { created, updated, removed: obsoleteIds.length, total: posters.length };
-  });
 }
