@@ -155,7 +155,7 @@ function ImportMovies() {
             >
               <div style={{ width: 100, flexShrink: 0 }}>
                 <Poster
-                  slot="table"
+                  slot="catalog"
                   movie={{
                     title: movie.title,
                     posterUrl: movie.posterPath
