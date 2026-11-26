@@ -311,7 +311,11 @@ function LoadedMovie({ movie, genres }: { movie?: Movie; genres: Genre[] }) {
               required
               maxLength={200}
               defaultValue={movie?.title}
-              placeholder="Ex.: título do arquivo em public"
+              placeholder={
+                movie?.tmdbId != null
+                ? 'Título do filme'
+                : 'Ex.: título do arquivo em public'
+              }
               onChange={(e) =>
                 setPreview({
                   ...preview,
@@ -319,10 +323,11 @@ function LoadedMovie({ movie, genres }: { movie?: Movie; genres: Genre[] }) {
                 })
               }
             />
-            <small className="muted">
-              O título precisa corresponder ao nome de uma imagem em public,
-              sem extensão; underscores são convertidos em espaços.
-            </small>
+          <small className="muted">
+            {movie?.tmdbId != null
+            ? 'Filme vinculado ao TMDB. O pôster será mantido ao salvar.'
+            : 'O título precisa corresponder ao nome de uma imagem em public, sem extensão; underscores são convertidos em espaços.'}
+          </small>
           </label>
           <div className="field-grid">
             <label className="field">

@@ -38,6 +38,8 @@ model Movie {
   watchlistedBy WatchlistItem[]
   watchedBy     WatchedMovie[]
   genres        Genre[]
+  tmdbId        Int?      @unique
+  tmdbUpdatedAt DateTime?
 
   @@index([title])
 }

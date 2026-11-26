@@ -3,7 +3,7 @@ import '@fontsource-variable/inter';
 import './globals.css';
 import { AuthProvider } from './components/AuthProvider';
 export const metadata: Metadata = {
-  title: { default: 'Catálogo de filmes', template: '%s · Catálogo de filmes' },
+  title: { default: 'Cinemark', template: '%s · Cinemark' },
   description:
     'Um lugar para descobrir, assistir e registrar. Explore filmes, compartilhe avaliações e organize sua Watchlist.',
 };

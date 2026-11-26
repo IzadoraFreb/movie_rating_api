@@ -1,6 +1,8 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
+import logo from '../../public/logo.png';
 import { useAuth } from './AuthProvider';
 import { Avatar } from './ui';
 export function SiteHeader() {
@@ -10,6 +12,9 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <nav aria-label="Navegação principal">
+        <Link href="/" aria-label="Página inicial" className="site-logo">
+          <Image src={logo} alt="Logo do catálogo" className="site-logo-image" />
+        </Link>
         <Link
           href="/"
           className={pathname === '/' ? 'active' : ''}
@@ -87,10 +92,11 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <main id="conteudo" className="public-main">
         {children}
       </main>
-      <footer className="site-footer">
-        <span>Um lugar para descobrir, assistir e registrar.</span>
+    <footer className="site-footer">
+      <span>Um lugar para descobrir, assistir e registrar.</span>
+      <Link href="/creditos">Créditos</Link>
         <span>Catálogo de filmes · 2026</span>
-      </footer>
+    </footer>
     </div>
   );
 }

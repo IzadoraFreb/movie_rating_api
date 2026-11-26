@@ -1,0 +1,29 @@
+@baseUrl = http://localhost:3000/api
+
+### 1. Login como administrador
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "felipe.alves@example.com",
+  "password": "Cinema123!"
+}
+
+### 2. Pesquisar filmes no TMDB
+GET {{baseUrl}}/tmdb/search?q=Shrek&page=1
+
+### 3. Consultar a ficha do Shrek no TMDB
+GET {{baseUrl}}/tmdb/movies/808
+
+### 4. Importar Shrek para o banco local
+# @name importarFilme
+POST {{baseUrl}}/tmdb/movies/808/import
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+
+### 5. Consultar o filme salvo usando seu id interno
+GET {{baseUrl}}/movies/{{importarFilme.response.body.$.id}}
+
+### 6. Repetir a importação: deve retornar o mesmo id
+POST {{baseUrl}}/tmdb/movies/808/import
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}

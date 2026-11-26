@@ -287,6 +287,14 @@ hr {
 .site-header .active {
   color: var(--accent);
 }
+.site-logo {
+  flex-shrink: 0;
+}
+.site-logo-image {
+  display: block;
+  width: 120px;
+  height: auto;
+}
 .site-header > nav > a.active {
   border-color: var(--accent);
   font-weight: 600;
@@ -1456,9 +1464,12 @@ input[type='radio'] {
     flex-wrap: wrap;
   }
   .site-header > nav {
-    gap: 22px;
+    gap: 14px;
     height: 64px;
     font-size: 13px;
+  }
+  .site-logo-image {
+    width: 84px;
   }
   .account-nav {
     gap: 8px;

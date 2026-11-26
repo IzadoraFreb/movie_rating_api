@@ -59,6 +59,11 @@ before(
       env,
       stdio: 'pipe',
     });
+    execFileSync(process.execPath, ['test/seed-catalog.mjs'], {
+      cwd: root,
+      env,
+      stdio: 'pipe',
+    });
     server = spawn(process.execPath, ['dist/main.js'], {
       cwd: root,
       env,
@@ -264,7 +269,7 @@ test('edição do perfil salva imagens e descrição apenas da própria conta', 
   assert.equal(cleared.bio, '');
 });
 
-test('catálogo usa somente títulos com cartazes locais', async () => {
+test('catálogo lista os filmes locais preparados para os testes', async () => {
   const highlights = await request('/movies/highlights');
   assert.equal(highlights.status, 200);
   assert.equal(highlights.body.movies.length, 6);

@@ -8,6 +8,9 @@ import '../models/models.dart';
 import '../services/api_service.dart';
 import '../widgets/common.dart';
 import 'movie_detail_screen.dart';
+import '../providers/auth_provider.dart';
+import 'import_movies_screen.dart';
+import 'credits_screen.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key, this.initialGenre, this.title = 'Filmes'});
@@ -264,12 +267,53 @@ class _CatalogScreenState extends State<CatalogScreen> {
     );
   }
 
+Future<void> _openImport() async {
+  final imported = await Navigator.of(context).push<bool>(
+    MaterialPageRoute<bool>(
+      builder: (_) => const ImportMoviesScreen(),
+    ),
+  );
+
+  if (!mounted || imported != true) return;
+
+  showSnack(context, 'Filme adicionado ao catálogo.');
+
+  await _loadFilters();
+
+  if (!mounted) return;
+
+  _search.clear();
+  _debounce?.cancel();
+  _clearFilters();
+}
+
   @override
   Widget build(BuildContext context) {
     final hasFilters =
         _genre.isNotEmpty || _year.isNotEmpty || _rating.isNotEmpty;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(
+  title: Text(widget.title),
+  actions: [
+    if (context.watch<AuthProvider>().user?.role == 'ADMIN')
+      IconButton(
+        tooltip: 'Importar do TMDB',
+        icon: const Icon(Icons.add),
+        onPressed: _openImport,
+      ),
+    IconButton(
+      tooltip: 'Créditos',
+      icon: const Icon(Icons.info_outline),
+      onPressed: () {
+        Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => const CreditsScreen(),
+          ),
+        );
+      },
+    ),
+  ],
+),
       body: Column(
         children: [
           Padding(

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { once } from 'node:events';
 const front = resolve(import.meta.dirname, '..');
-const root = resolve(front, '..');
+const root = resolve(front, '..', 'api');
 const directory = await mkdtemp(join(tmpdir(), 'movie-browser-test-'));
 await writeFile(join(directory, 'browser.db'), '');
 const env = {
@@ -28,6 +28,11 @@ execFileSync(
   { cwd: root, env, stdio: 'pipe' },
 );
 execFileSync(process.execPath, ['dist/seed.js'], {
+  cwd: root,
+  env,
+  stdio: 'pipe',
+});
+execFileSync(process.execPath, ['test/seed-catalog.mjs'], {
   cwd: root,
   env,
   stdio: 'pipe',

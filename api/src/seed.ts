@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import { PrismaService } from './prisma/prisma.service';
 import { hashPassword } from './auth/password';
-import { synchronizeMovieCatalog } from './movies/movie-posters';
 
 async function seed() {
   if (process.env.NODE_ENV === 'production')
@@ -55,10 +54,6 @@ async function seed() {
         },
       });
     }
-    const catalog = await synchronizeMovieCatalog(prisma);
-    console.log(
-      `Catálogo sincronizado: ${catalog.total} cartazes, ${catalog.created} filmes criados e ${catalog.removed} sem cartaz removidos.`,
-    );
     console.log(
       'Usuário: ana.martins@example.com | Admin: felipe.alves@example.com',
     );

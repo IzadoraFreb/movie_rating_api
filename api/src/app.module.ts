@@ -7,6 +7,7 @@ import { MoviesModule } from './movies/movies.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { WatchlistModule } from './watchlist/watchlist.module';
+import { TmdbModule } from './tmdb/tmdb.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { WatchlistModule } from './watchlist/watchlist.module';
     WatchlistModule,
     GenresModule,
     AdminModule,
+    TmdbModule,
   ],
   controllers: [AppController],
 })

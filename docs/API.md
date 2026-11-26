@@ -4,6 +4,8 @@ API REST em NestJS com SQLite e Prisma. As rotas usam o prefixo `/api`.
 
 ## Executar localmente
 
+Execute os comandos abaixo dentro de `api/` (`cd api` a partir da raiz do repositório). Caminhos como `.env`, `public` e `uploads` nesta página são relativos a essa pasta.
+
 1. Copie `.env.example` para `.env` e defina um `JWT_SECRET` longo e aleatório.
 2. Instale dependências: `npm install`.
 	Se o npm bloquear o script nativo do SQLite, execute `npm install-scripts approve better-sqlite3` e `npm rebuild better-sqlite3`.
@@ -29,12 +31,15 @@ Authorization: Bearer <accessToken>
 | GET | `/api/movies/highlights` | Público | Seis filmes em destaque e três avaliações recentes para a página inicial, sem dados privados dos autores |
 | GET | `/api/movies/:id` | Público | Detalhes e avaliações do filme |
 | POST | `/api/movies` | Admin | Cadastrar filme cujo `title` corresponda a um arquivo de cartaz local em `public`; demais campos (`releaseYear?`, `duration?`, `director?`, `synopsis?`, `genreIds?`) são opcionais |
-| PATCH | `/api/movies/:id` | Admin | Atualizar filme mantendo título correspondente a um cartaz em `public`; `genreIds: []` remove vínculos. O cartaz local não pode ser removido nem substituído por URL externa |
+| PATCH | `/api/movies/:id` | Admin | Atualizar filme; títulos locais exigem cartaz em `public`, enquanto filmes vinculados ao TMDB preservam seu pôster externo. `genreIds: []` remove vínculos |
 | DELETE | `/api/movies/:id` | Admin | Excluir filme e os registros associados |
 | GET | `/api/movies/:id/activity` | Token | Estado de assistido, Watchlist e avaliação do usuário atual |
 | PUT | `/api/movies/:id/watched` | Token | Registrar como assistido sem exigir nota |
 | PUT | `/api/movies/:id/review` | Token | Criar/atualizar avaliação (`rating` de 1 a 5, `comment?`, `watchedAt?`) |
 | DELETE | `/api/movies/:id/review` | Token | Remover sua avaliação |
+| GET | `/api/tmdb/search?q=&page=1` | Público | Pesquisar filmes no TMDB |
+| GET | `/api/tmdb/movies/:tmdbId` | Público | Consultar a ficha do TMDB sem salvar |
+| POST | `/api/tmdb/movies/:tmdbId/import` | Admin | Importar filme ou devolver o registro já importado, sem atualizar sua ficha |
 | GET | `/api/users/:username` | Público | Perfil e contagens sociais |
 | GET | `/api/users/:username/reviews` | Público | Diário de filmes avaliados |
 | GET | `/api/users/:username/followers` | Público | Seguidores |
@@ -62,10 +67,12 @@ Authorization: Bearer <accessToken>
 
 Há uma avaliação por usuário e filme; enviar `PUT` novamente substitui a anterior e registra o filme como assistido na mesma transação. Remover a avaliação preserva o histórico de assistidos. Médias são calculadas a partir das notas existentes. Administradores são verificados no banco a cada ação protegida e não podem remover o próprio acesso administrativo.
 
-O banco usa migrações Prisma; a nova migração preserva os registros existentes e converte avaliações anteriores em histórico de assistidos. A API valida payloads, rejeitando campos desconhecidos. Os perfis públicos não expõem e-mail nem senha.
+O banco é criado e atualizado pelas migrações Prisma. A API valida payloads, rejeitando campos desconhecidos. Os perfis públicos não expõem e-mail nem senha.
 
 Na edição do próprio perfil, `displayName` aceita de 2 a 80 caracteres e `bio`, até 500. Foto e banner aceitam PNG, JPG ou WebP, com limite de 5 MB por arquivo. Use `removeAvatar=true` ou `removeBanner=true` para remover imagens; campos omitidos preservam o valor anterior. O usuário só altera a conta identificada pelo token. Campos administrativos, como `role` ou `userId`, são rejeitados nessa rota.
 
-As imagens são salvas em `uploads/profiles`, fora do Git, ou no diretório definido em `PROFILE_UPLOAD_DIR`. Os nomes dos arquivos são gerados pelo servidor. A migração `20261105200000_profile_banner` adiciona o banner sem modificar os demais dados.
+As imagens de perfil e de banner são salvas em `uploads/profiles`, fora do Git, ou no diretório definido em `PROFILE_UPLOAD_DIR`. Os nomes dos arquivos são gerados pelo servidor.
 
-`npm run db:seed` cria 8 gêneros e 6 contas de demonstração e sincroniza os filmes com imagens JPG, JPEG (incluindo `.jpe`), PNG ou WebP em `public`. O título é o nome do arquivo sem extensão, com underscores substituídos por espaços. A API repete essa sincronização ao iniciar, preserva registros e avaliações de filmes que continuam tendo cartaz e remove filmes sem imagem correspondente. A sincronização não cria filmes sem cartaz e funciona somente fora de produção para o seed. Consulte [frontapp/README.md](../frontapp/README.md) para iniciar o frontend e usar as contas de demonstração.
+`npm run db:seed` cria 8 gêneros e 6 contas de demonstração. O catálogo começa vazio e pode ser preenchido por um administrador, importando filmes do TMDB ou cadastrando filmes manualmente com cartazes locais em `public`. Adicionar um cartaz nessa pasta não cadastra o filme automaticamente. O token de leitura do TMDB fica em `api/.env`, na variável `TMDB_READ_ACCESS_TOKEN`.
+
+Consulte o [README do repositório](../README.md) para iniciar API, frontend e mobile, importar filmes e usar as contas de demonstração. Os exemplos REST Client estão em [api/requests.http](../api/requests.http).

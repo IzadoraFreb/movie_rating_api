@@ -159,13 +159,24 @@ export default function AdminList({ kind }: { kind: Kind }) {
         description={details.description}
         count={total + ' ' + details.singular}
         action={
-          details.add && (
-            <Link className="button primary" href={base + '/novo'}>
-              <Icon name="plusWhite" />
-              {details.add}
-            </Link>
-          )
-        }
+  <div className="inline">
+    {kind === 'filmes' && (
+      <Link
+        className="button"
+        href="/admin/filmes/importar"
+      >
+        Importar do TMDB
+      </Link>
+    )}
+
+    {details.add && (
+      <Link className="button primary" href={base + '/novo'}>
+        <Icon name="plusWhite" />
+        {details.add}
+      </Link>
+    )}
+  </div>
+}
       />
       <Feedback error={error} />
       <div className="list-toolbar">
